@@ -399,7 +399,6 @@ void BattleAI_ChooseMoveOrAction(void)
 
     gCurrentMove = savedCurrentMove;
     AI_THINKING_STRUCT->chosenMoveId = ret;
-    return ret;
 }
 
 static u8 ChooseMoveOrAction_Singles(void)
