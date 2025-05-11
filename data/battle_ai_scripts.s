@@ -1205,9 +1205,8 @@ AI_CV_SpeedDownFromChance:
 
 AI_CV_Speed:
 	if_target_faster AI_CV_Speed2
-	score -2
 	if_random_less_than 32, AI_End
-	score -8
+	score -2
 	end
 
 AI_CV_Speed2:
@@ -2678,10 +2677,16 @@ AI_CV_WeatherImmune:
 AI_CV_Counter:
 	if_has_attack_of_category AI_TARGET, TYPE_PHYSICAL, AI_CV_Counter_SemiInvCheck
 	if_has_move AI_TARGET, MOVE_HIDDEN_POWER, AI_CV_Counter_SemiInvCheck
+	if_has_move_with_effect AI_TARGET, EFFECT_ENDEAVOR, AI_CV_Counter_SemiInvCheck
+	if_has_move_with_effect AI_TARGET, EFFECT_LEVEL_DAMAGE, AI_CV_Counter_SemiInvCheck
+	if_has_move_with_effect AI_TARGET, EFFECT_SONICBOOM, AI_CV_Counter_SemiInvCheck
+	if_has_move_with_effect AI_TARGET, EFFECT_SUPER_FANG, AI_CV_Counter_SemiInvCheck
 	goto AI_CV_CounterCoat_Useless
 
 AI_CV_MirrorCoat:
 	if_has_attack_of_category AI_TARGET, TYPE_SPECIAL, AI_CV_Counter_SemiInvCheck
+	if_has_move_with_effect AI_TARGET, EFFECT_DRAGON_RAGE, AI_CV_Counter_SemiInvCheck
+	if_has_move_with_effect AI_TARGET, EFFECT_PSYWAVE, AI_CV_Counter_SemiInvCheck
 AI_CV_CounterCoat_Useless:
 	score -10
 	end

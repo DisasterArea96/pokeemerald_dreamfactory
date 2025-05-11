@@ -280,6 +280,23 @@ static const u16 sIgnoredPowerfulMoveEffects[] =
     IGNORED_MOVES_END
 };
 
+// We want to ignore moves with these effects when considering if the opponent has moves in a certain category
+static const u16 sIgnoredDamageEffects[] =
+{
+    EFFECT_BIDE,
+    EFFECT_COUNTER,
+    EFFECT_DRAGON_RAGE,
+    EFFECT_ENDEAVOR,
+    EFFECT_HIDDEN_POWER,
+    EFFECT_LEVEL_DAMAGE,
+    EFFECT_MIRROR_COAT,
+    EFFECT_OHKO,
+    EFFECT_PSYWAVE,
+    EFFECT_SONICBOOM,
+    EFFECT_SUPER_FANG,
+    IGNORED_MOVES_END
+};
+
 void BattleAI_HandleItemUseBeforeAISetup(u8 defaultScoreMoves)
 {
     s32 i;
@@ -1080,8 +1097,8 @@ static void Cmd_if_has_attack_of_type(void)
 
 static void Cmd_if_has_attack_of_category(void)
 {
-    u8 battlerId, moveFound;
-    s32 i;
+    u8 battlerId, moveFound, ignoreMove;
+    s32 i, j;
 
     DebugPrintf("Running Cmd_if_has_attack_of_category");
 
@@ -1098,10 +1115,25 @@ static void Cmd_if_has_attack_of_category(void)
 
         for (i = 0; i < MAX_MON_MOVES; i++)
             {
-                if(IS_TYPE_PHYSICAL(gBattleMoves[gBattleMons[battlerId].moves[i]].type) && gBattleMoves[gBattleMons[battlerId].moves[i]].effect != EFFECT_HIDDEN_POWER)
+                if(IS_TYPE_PHYSICAL(gBattleMoves[gBattleMons[battlerId].moves[i]].type)
+                    && gBattleMons[battlerId].pp[i] > 0
+                    && gBattleMoves[gBattleMons[battlerId].moves[i]].power != 0
+                )
                     {
-                        moveFound = TRUE;
-                        break;
+                        ignoreMove = FALSE;
+
+                        for (j = 0; sIgnoredDamageEffects[j] != IGNORED_MOVES_END; j++)
+                            {
+                                if (gBattleMoves[gBattleMons[battlerId].moves[i]].effect == sIgnoredDamageEffects[j])
+                                    ignoreMove = TRUE;
+                                    break;
+                            }
+
+                        if (ignoreMove == FALSE)
+                            {
+                                moveFound = TRUE;
+                                break;
+                            }
                     }
             }
     }
@@ -1111,10 +1143,25 @@ static void Cmd_if_has_attack_of_category(void)
 
         for (i = 0; i < MAX_MON_MOVES; i++)
             {
-                if(IS_TYPE_SPECIAL(gBattleMoves[gBattleMons[battlerId].moves[i]].type) && gBattleMoves[gBattleMons[battlerId].moves[i]].effect != EFFECT_HIDDEN_POWER)
+                if(IS_TYPE_SPECIAL(gBattleMoves[gBattleMons[battlerId].moves[i]].type)
+                    && gBattleMons[battlerId].pp[i] > 0
+                    && gBattleMoves[gBattleMons[battlerId].moves[i]].power != 0
+                )
                     {
-                        moveFound = TRUE;
-                        break;
+                        ignoreMove = FALSE;
+
+                        for (j = 0; sIgnoredDamageEffects[j] != IGNORED_MOVES_END; j++)
+                            {
+                                if (gBattleMoves[gBattleMons[battlerId].moves[i]].effect == sIgnoredDamageEffects[j])
+                                    ignoreMove = TRUE;
+                                    break;
+                            }
+
+                        if (ignoreMove == FALSE)
+                            {
+                                moveFound = TRUE;
+                                break;
+                            }
                     }
             }
     }
