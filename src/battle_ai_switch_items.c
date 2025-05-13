@@ -33,109 +33,6 @@ static bool8 ShouldSwitchIfPerishSong(void)
     }
 }
 
-static bool8 ShouldSwitchIfWonderGuard(void)
-{
-    u8 opposingPosition;
-    u8 opposingBattler;
-    u8 moveFlags;
-    s32 i, j;
-    s32 firstId;
-    s32 lastId; // + 1
-    struct Pokemon *party = NULL;
-    u16 move;
-
-    if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
-        return FALSE;
-
-    opposingPosition = BATTLE_OPPOSITE(GetBattlerPosition(gActiveBattler));
-
-    if (gBattleMons[GetBattlerAtPosition(opposingPosition)].ability != ABILITY_WONDER_GUARD)
-        return FALSE;
-
-    // Check if Pokemon has a super effective move.
-    for (opposingBattler = GetBattlerAtPosition(opposingPosition), i = 0; i < MAX_MON_MOVES; i++)
-    {
-        move = gBattleMons[gActiveBattler].moves[i];
-        if (move == MOVE_NONE)
-            continue;
-
-        moveFlags = AI_TypeCalc(move, gBattleMons[opposingBattler].species, gBattleMons[opposingBattler].ability);
-        if (moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
-            return FALSE;
-    }
-
-    // Get party information.
-    if (gBattleTypeFlags & (BATTLE_TYPE_TWO_OPPONENTS | BATTLE_TYPE_TOWER_LINK_MULTI))
-    {
-        if ((gActiveBattler & BIT_FLANK) == B_FLANK_LEFT)
-            firstId = 0, lastId = PARTY_SIZE / 2;
-        else
-            firstId = PARTY_SIZE / 2, lastId = PARTY_SIZE;
-    }
-    else
-    {
-        firstId = 0, lastId = PARTY_SIZE;
-    }
-
-    if (GetBattlerSide(gActiveBattler) == B_SIDE_PLAYER)
-        party = gPlayerParty;
-    else
-        party = gEnemyParty;
-
-    // Find a Pokemon in the party that has a super effective move.
-    for (i = firstId; i < lastId; i++)
-    {
-        if (GetMonData(&party[i], MON_DATA_HP) == 0)
-            continue;
-        if (GetMonData(&party[i], MON_DATA_SPECIES_OR_EGG) == SPECIES_NONE)
-            continue;
-        if (GetMonData(&party[i], MON_DATA_SPECIES_OR_EGG) == SPECIES_EGG)
-            continue;
-        if (i == gBattlerPartyIndexes[gActiveBattler])
-            continue;
-
-        GetMonData(&party[i], MON_DATA_SPECIES); // Unused return value.
-        GetMonData(&party[i], MON_DATA_ABILITY_NUM); // Unused return value.
-
-        for (opposingBattler = GetBattlerAtPosition(opposingPosition), j = 0; j < MAX_MON_MOVES; j++)
-        {
-            move = GetMonData(&party[i], MON_DATA_MOVE1 + j);
-            if (move == MOVE_NONE)
-                continue;
-
-            moveFlags = AI_TypeCalc(move, gBattleMons[opposingBattler].species, gBattleMons[opposingBattler].ability);
-            if (moveFlags & MOVE_RESULT_SUPER_EFFECTIVE && Random() % 3 < 2)
-            {
-                // We found a mon.
-                *(gBattleStruct->AI_monToSwitchIntoId + gActiveBattler) = i;
-                BtlController_EmitTwoReturnValues(BUFFER_B, B_ACTION_SWITCH, 0);
-                return TRUE;
-            }
-        }
-    }
-
-    return FALSE; // There is not a single Pokemon in the party that has a super effective move against a mon with Wonder Guard.
-}
-
-static bool8 ShouldSwitchIfNaturalCure(void)
-{
-    if (gBattleMons[gActiveBattler].ability != ABILITY_NATURAL_CURE)
-        return FALSE;
-    if (gBattleMons[gActiveBattler].hp < gBattleMons[gActiveBattler].maxHP / 2)
-        return FALSE;
-    if (!(gBattleMons[gActiveBattler].status1 & STATUS1_ANY))
-        return FALSE;
-
-    if (Random() % 7 < 2)
-    {
-        *(gBattleStruct->AI_monToSwitchIntoId + gActiveBattler) = PARTY_SIZE;
-        BtlController_EmitTwoReturnValues(BUFFER_B, B_ACTION_SWITCH, 0);
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
 static bool8 ShouldSwitchIfLowScore(void)
 {
     s32 i, j;
@@ -144,7 +41,12 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 damageVar, consideredEffect, teamHasRapidSpin, aiCanFaint, targetCanFaint, isFaster, hasPriority, hasWishCombo, BatonPassChosen;
     u16 hp, species;
     s8 maxScore = 0;
-    s8 threshold = 94;
+    s8 threshold = 90;
+
+    //Initialising arrays
+    u8 statBoostingEffects[] = {EFFECT_ATTACK_UP, EFFECT_ATTACK_UP_2, EFFECT_SPECIAL_ATTACK_UP, EFFECT_SPECIAL_ATTACK_UP_2, EFFECT_BELLY_DRUM, EFFECT_BULK_UP, EFFECT_CALM_MIND, EFFECT_CURSE, EFFECT_DRAGON_DANCE};
+    u8 shedinjaKOEffects[] = {EFFECT_CONFUSE, EFFECT_FLATTER, EFFECT_HAIL, EFFECT_LEECH_SEED, EFFECT_POISON, EFFECT_SANDSTORM, EFFECT_SWAGGER, EFFECT_TOXIC, EFFECT_WILL_O_WISP};
+    u8 healingEffects[] = {EFFECT_MOONLIGHT, EFFECT_MORNING_SUN, EFFECT_SYNTHESIS, EFFECT_WISH, EFFECT_REST, EFFECT_SOFTBOILED, EFFECT_RESTORE_HP};
 
     //Frequently referenced information
     u8 currentHP = gBattleMons[gActiveBattler].hp;
@@ -153,42 +55,20 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 turnCount = gBattleResults.battleTurnCounter;
     u8 aiFirstTurn = gDisableStructs[gActiveBattler].isFirstTurn;
 
-    //Arrays
-    u8 statBoostingEffects[] = {EFFECT_ATTACK_UP, EFFECT_ATTACK_UP_2, EFFECT_SPECIAL_ATTACK_UP, EFFECT_SPECIAL_ATTACK_UP_2, EFFECT_BELLY_DRUM, EFFECT_BULK_UP, EFFECT_CALM_MIND, EFFECT_CURSE, EFFECT_DRAGON_DANCE};
-    u8 shedinjaKOEffects[] = {EFFECT_CONFUSE, EFFECT_FLATTER, EFFECT_HAIL, EFFECT_LEECH_SEED, EFFECT_POISON, EFFECT_SANDSTORM, EFFECT_SWAGGER, EFFECT_TOXIC, EFFECT_WILL_O_WISP};
-    u8 healingEffects[] = {EFFECT_MOONLIGHT, EFFECT_MORNING_SUN, EFFECT_SYNTHESIS, EFFECT_WISH, EFFECT_REST, EFFECT_SOFTBOILED, EFFECT_RESTORE_HP};
-
     //Initialising booleans
     teamHasRapidSpin = aiCanFaint = targetCanFaint = isFaster = hasPriority = hasWishCombo = BatonPassChosen = FALSE;
 
     DebugPrintf("Checking ShouldSwitchIfLowScore.");
 
-    //Note that increasing the threshold encourages switching, and the reverse
+    //Note that increasing the threshold encourages switching
 
-    //Slightly lower threshold in the first few turns of the battle
-    if(turnCount < 5 && aiFirstTurn && !(gDisableStructs[gBattlerTarget].isFirstTurn))
+    //Check badly poisoned. equal chance of +0, +1, +2 threshold for each turn of badly poisoned. Expected gain in threshold is equal to the number of turns poisoned
+    for (i = 1; (gBattleMons[gActiveBattler].status1 & STATUS1_TOXIC_COUNTER) >= STATUS1_TOXIC_TURN(i); i++)
         {
-            threshold += -5 + turnCount;
-            DebugPrintf("First turn score lowering applied. Threshold now: %d",(signed char) threshold);
+            threshold += Random() % 3;
         }
 
-    //Check badly poisoned
-    if ((gBattleMons[gActiveBattler].status1 & STATUS1_TOXIC_COUNTER) >= STATUS1_TOXIC_TURN(3))
-        {
-            threshold += 4 + Random() % 3;
-
-            if ((gBattleMons[gActiveBattler].status1 & STATUS1_TOXIC_COUNTER) >= STATUS1_TOXIC_TURN(5))
-                {
-                    threshold += 3;
-                }
-
-            if ((gBattleMons[gActiveBattler].status1 & STATUS1_TOXIC_COUNTER) >= STATUS1_TOXIC_TURN(7))
-                {
-                    threshold += 3;
-                }
-
-            DebugPrintf("Badly poisoned check applied. Threshold now: %d",(signed char) threshold);
-        }
+    DebugPrintf("Badly poisoned check applied. Threshold now: %d",(signed char));
 
     //Check cursed or nightmared
     if (gBattleMons[gActiveBattler].status2 & (STATUS2_CURSED | STATUS2_NIGHTMARE))
@@ -654,10 +534,6 @@ static bool8 ShouldSwitch(void)
     if (ShouldSwitchIfPerishSong())
         return TRUE;
     if (ShouldSwitchIfLowScore())
-        return TRUE;
-    if (ShouldSwitchIfNaturalCure())
-        return TRUE;
-    if (ShouldSwitchIfWonderGuard())
         return TRUE;
 
     return FALSE;
