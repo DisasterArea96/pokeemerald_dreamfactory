@@ -38,10 +38,10 @@ static bool8 ShouldSwitchIfLowScore(void)
     s32 i, j;
     s8 currentScore;
     u8 *dynamicMoveType;
-    u8 damageVar, consideredEffect, teamHasRapidSpin, aiCanFaint, targetCanFaint, isFaster, hasPriority, hasWishCombo, BatonPassChosen;
+    u8 aiCanFaint, BatonPassChosen, damageVar, consideredEffect, isFaster, hasPriority, hasWishCombo, moveFlags, targetCanFaint, teamHasRapidSpin;
     u16 hp, species;
     s8 maxScore = 0;
-    s8 threshold = 90;
+    s8 threshold = 92;
 
     //Initialising arrays
     u8 statBoostingEffects[] = {EFFECT_ATTACK_UP, EFFECT_ATTACK_UP_2, EFFECT_SPECIAL_ATTACK_UP, EFFECT_SPECIAL_ATTACK_UP_2, EFFECT_BELLY_DRUM, EFFECT_BULK_UP, EFFECT_CALM_MIND, EFFECT_CURSE, EFFECT_DRAGON_DANCE};
@@ -72,17 +72,15 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     //Check cursed or nightmared
     if (gBattleMons[gActiveBattler].status2 & (STATUS2_CURSED | STATUS2_NIGHTMARE))
-        {
-            threshold += 8;
-            DebugPrintf("Curse / Nightmare check applied. Threshold now: %d",(signed char) threshold);
-        }
+        threshold += 8;
+
+    DebugPrintf("Curse / Nightmare check applied. Threshold now: %d",(signed char) threshold);
 
     //Check substitute
     if (gBattleMons[gActiveBattler].status2 & (STATUS2_SUBSTITUTE))
-        {
-            threshold += -2;
-            DebugPrintf("Substitute for self check applied. Threshold now: %d",(signed char) threshold);
-        }
+        threshold += -2;
+
+    DebugPrintf("Substitute for self check applied. Threshold now: %d",(signed char) threshold);
 
     //Check seeded
     if ((gStatuses3[gActiveBattler] & STATUS3_LEECHSEED))
@@ -90,34 +88,39 @@ static bool8 ShouldSwitchIfLowScore(void)
             threshold += 6;
 
             if(Random() % 6)
-                {
-                    threshold += 1;
-                }
-
-            DebugPrintf("Leech seed check applied. Threshold now: %d",(signed char) threshold);
+                threshold += 2;
         }
+
+    DebugPrintf("Leech seed check applied. Threshold now: %d",(signed char) threshold);
 
     //Check yawned, with no sleep removal item
     if ((gStatuses3[gActiveBattler] & STATUS3_YAWN)
         && item != ITEM_CHESTO_BERRY
-        && item != ITEM_LUM_BERRY)
+        && item != ITEM_LUM_BERRY
+        && gBattleMons[gActiveBattler].ability != ABILITY_NATURAL_CURE
+    )
         {
             threshold += 6;
 
             if(Random() % 6)
-                {
-                    threshold += 2;
-                }
-
-            DebugPrintf("Yawn check applied. Threshold now: %d",(signed char) threshold);
+                threshold += 2;
         }
+
+    DebugPrintf("Yawn check applied. Threshold now: %d",(signed char) threshold);
 
     //Check encored
     if (gDisableStructs[gActiveBattler].encoredMove != MOVE_NONE && item != ITEM_CHOICE_BAND)
-        {
-            threshold += 5 + Random() % 3;
-            DebugPrintf("Encore check applied. Threshold now: %d",(signed char) threshold);
-        }
+        threshold += 5 + Random() % 3;
+
+    DebugPrintf("Encore check applied. Threshold now: %d",(signed char) threshold);
+
+    //Check for natural cure & status combo
+    if (gBattleMons[gActiveBattler].ability == ABILITY_NATURAL_CURE
+        && (gBattleMons[gActiveBattler].status1 & STATUS1_ANY)
+    )
+        threshold += 8;
+
+    DebugPrintf("Natural cure check applied. Threshold now: %d",(signed char) threshold);
 
     //Discourage staying in when choice locked, especially when locked into sleep talk
     if(!(aiFirstTurn) && item == ITEM_CHOICE_BAND)
@@ -125,12 +128,10 @@ static bool8 ShouldSwitchIfLowScore(void)
             threshold += 5;
 
             if(lastUsedEffect == EFFECT_SLEEP_TALK)
-                {
-                    threshold += 30;
-                }
-
-            DebugPrintf("CB check applied. Threshold now: %d",(signed char) threshold);
+                threshold += 30;
         }
+
+    DebugPrintf("CB check applied. Threshold now: %d",(signed char) threshold);
 
     //Check for stat boosting moves on the opponent's side
     for (i = 0; i < MAX_MON_MOVES; i++)
@@ -161,10 +162,9 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     //check if spikes are up
     if (gSideStatuses[B_SIDE_OPPONENT] & SIDE_STATUS_SPIKES)
-        {
-            threshold += -2 - Random() % 3;
-            DebugPrintf("Spikes check applied. Threshold now: %d",(signed char) threshold);
-        }
+        threshold += -2 - Random() % 3;
+
+    DebugPrintf("Spikes check applied. Threshold now: %d",(signed char) threshold);
 
     //Check if own stat levels are above the minimum
     for (i = 1; i < NUM_BATTLE_STATS; i++)
@@ -187,18 +187,43 @@ static bool8 ShouldSwitchIfLowScore(void)
     gMoveResultFlags = 0;
     gCritMultiplier = 1;
 
-    for (i = 0; i < MAX_MON_MOVES; i++)
+    if (gBattleMons[gActiveBattler].ability == ABILITY_WONDER_GUARD)
         {
-            gCurrentMove = gBattleMons[gBattlerTarget].moves[i];
-
-            if (gCurrentMove != MOVE_NONE)
+            for (i = 0; i < MAX_MON_MOVES; i++)
                 {
-                    AI_CalcDmg(gBattlerTarget, gActiveBattler);
-                    TypeCalc(gCurrentMove, gBattlerTarget, gActiveBattler);
+                    gCurrentMove = gBattleMons[gBattlerTarget].moves[i];
 
-                    // Get the highest battle move damage
-                    if (damageVar < gBattleMoveDamage)
-                        damageVar = gBattleMoveDamage;
+                    moveFlags = AI_TypeCalc(gCurrentMove, gBattlerTarget, gActiveBattler);
+
+                    // If the opponent has an attacking move that can KO shedinja
+                    if (gBattleMoves[gBattleMons[gBattlerTarget].moves[i]].power > 0
+                        && moveFlags & MOVE_RESULT_SUPER_EFFECTIVE
+                    )
+                        damageVar = 100;
+
+                    //Check each effect that can KO shedinja
+                    for (j = 0; j < ARRAY_COUNT(shedinjaKOEffects); j++)
+                        {
+                            if (gBattleMoves[gBattleMons[gBattlerTarget].moves[i]].effect == shedinjaKOEffects[j])
+                                damageVar = 100;
+                        }
+                }
+        }
+    else
+        {
+            for (i = 0; i < MAX_MON_MOVES; i++)
+                {
+                    gCurrentMove = gBattleMons[gBattlerTarget].moves[i];
+
+                    if (gCurrentMove != MOVE_NONE)
+                        {
+                            AI_CalcDmg(gBattlerTarget, gActiveBattler);
+                            TypeCalc(gCurrentMove, gBattlerTarget, gActiveBattler);
+
+                            // Get the highest battle move damage
+                            if (damageVar < gBattleMoveDamage)
+                                damageVar = gBattleMoveDamage;
+                        }
                 }
         }
 
@@ -206,11 +231,9 @@ static bool8 ShouldSwitchIfLowScore(void)
     damageVar = damageVar * 95 / 100;
 
     if (currentHP <= damageVar)
-        {
-            aiCanFaint = TRUE;
-        }
+        aiCanFaint = TRUE;
 
-    DebugPrintf("Result: %d",aiCanFaint);
+    DebugPrintf("aiCanFaint: %d",aiCanFaint);
 
     // Check if target can faint
     damageVar = 0;
@@ -221,18 +244,43 @@ static bool8 ShouldSwitchIfLowScore(void)
     gMoveResultFlags = 0;
     gCritMultiplier = 1;
 
-    for (i = 0; i < MAX_MON_MOVES; i++)
+    if (gBattleMons[gBattlerTarget].ability == ABILITY_WONDER_GUARD)
         {
-            gCurrentMove = gBattleMons[gActiveBattler].moves[i];
-
-            if (gCurrentMove != MOVE_NONE)
+            for (i = 0; i < MAX_MON_MOVES; i++)
                 {
-                    AI_CalcDmg(gActiveBattler, gBattlerTarget);
-                    TypeCalc(gCurrentMove, gActiveBattler, gBattlerTarget);
+                    gCurrentMove = gBattleMons[gActiveBattler].moves[i];
 
-                    // Get the highest battle move damage
-                    if (damageVar < gBattleMoveDamage)
-                        damageVar = gBattleMoveDamage;
+                    moveFlags = AI_TypeCalc(gCurrentMove, gActiveBattler, gBattlerTarget);
+
+                    // If the player an attacking move that can KO shedinja
+                    if (gBattleMoves[gBattleMons[gActiveBattler].moves[i]].power > 0
+                        && moveFlags & MOVE_RESULT_SUPER_EFFECTIVE
+                    )
+                        damageVar = 100;
+
+                    //Check each effect that can KO shedinja
+                    for (j = 0; j < ARRAY_COUNT(shedinjaKOEffects); j++)
+                        {
+                            if (gBattleMoves[gBattleMons[gActiveBattler].moves[i]].effect == shedinjaKOEffects[j])
+                                damageVar = 100;
+                        }
+                }
+        }
+    else
+        {
+            for (i = 0; i < MAX_MON_MOVES; i++)
+                {
+                    gCurrentMove = gBattleMons[gActiveBattler].moves[i];
+
+                    if (gCurrentMove != MOVE_NONE)
+                        {
+                            AI_CalcDmg(gActiveBattler, gBattlerTarget);
+                            TypeCalc(gCurrentMove, gActiveBattler, gBattlerTarget);
+
+                            // Get the highest battle move damage
+                            if (damageVar < gBattleMoveDamage)
+                                damageVar = gBattleMoveDamage;
+                        }
                 }
         }
 
@@ -240,11 +288,9 @@ static bool8 ShouldSwitchIfLowScore(void)
     damageVar = damageVar * 95 / 100;
 
     if (gBattleMons[gBattlerTarget].hp <= damageVar)
-        {
-            targetCanFaint = TRUE;
-        }
+        targetCanFaint = TRUE;
 
-    DebugPrintf("Result: %d",targetCanFaint);
+    DebugPrintf("targetCanFaint: %d",targetCanFaint);
 
     //Check if AI is faster
     if ((GetWhoStrikesFirst(gBattlerTarget, gActiveBattler, TRUE)))
@@ -262,15 +308,11 @@ static bool8 ShouldSwitchIfLowScore(void)
                 || (consideredEffect == EFFECT_FAKE_OUT
                     && aiFirstTurn)
             )
-                {
-                    hasPriority = TRUE;
-                }
+                hasPriority = TRUE;
 
             if (lastUsedEffect == EFFECT_WISH
                 || consideredEffect == EFFECT_SEMI_INVULNERABLE)
-                {
-                    hasWishCombo = TRUE;
-                }
+                hasWishCombo = TRUE;
         }
 
     DebugPrintf("isFaster: %d, hasPriority: %d",isFaster,hasPriority);
@@ -295,11 +337,10 @@ static bool8 ShouldSwitchIfLowScore(void)
             {
                 threshold += -5;
 
+                //Discourage switching after using these moves, since it resets the sleep counter!
                 if(lastUsedEffect == EFFECT_SLEEP_TALK
                     || lastUsedEffect == EFFECT_SNORE)
-                    {
-                        threshold += -3;
-                    }
+                    threshold += -3;
 
                 DebugPrintf("AI asleep. Threshold now: %d",(signed char) threshold);
             }
@@ -319,15 +360,11 @@ static bool8 ShouldSwitchIfLowScore(void)
                         if (gBattleMoves[gBattleMons[gActiveBattler].moves[i]].effect == healingEffects[j])
                             {
                                 if (isFaster)
-                                    {
-                                        threshold += -4;
-                                        break;
-                                    }
+                                    threshold += -4;
                                 else
-                                    {
-                                        threshold += 4;
-                                        break;
-                                    }
+                                    threshold += 4;
+
+                                break;
                             }
                     }
             }
@@ -346,21 +383,6 @@ static bool8 ShouldSwitchIfLowScore(void)
                     threshold += 30;
                     DebugPrintf("Shedinja can faint. Threshold now: %d",(signed char) threshold);
                 }
-
-            //Check for status moves which KO Shedinja on the opposing side
-            for (i = 0; i < MAX_MON_MOVES; i++)
-                {
-                    for (j = 0; j < ARRAY_COUNT(shedinjaKOEffects); j++)
-                        {
-                            if (gBattleMoves[gBattleMons[gBattlerTarget].moves[i]].effect == shedinjaKOEffects[j])
-                                {
-                                    threshold += 30;
-                                    break;
-                                }
-                        }
-                }
-
-            DebugPrintf("Dangerous status moves searched for. Threshold now: %d",(signed char) threshold);
 
             //Check if shedinja is confused
             if ((gBattleMons[gActiveBattler].status2 & STATUS2_CONFUSION))
@@ -388,9 +410,7 @@ static bool8 ShouldSwitchIfLowScore(void)
                             for (j = 0; j < MAX_MON_MOVES; j++)
                                 {
                                     if (gBattleMoves[GetMonData(&gEnemyParty[i], MON_DATA_MOVE1 + j)].effect == EFFECT_RAPID_SPIN)
-                                        {
-                                            teamHasRapidSpin = TRUE;
-                                        }
+                                        teamHasRapidSpin = TRUE;
                                 }
                         }
                 }
@@ -411,14 +431,13 @@ static bool8 ShouldSwitchIfLowScore(void)
 
                     //check if spikes are up
                     if (gSideStatuses[B_SIDE_OPPONENT] & SIDE_STATUS_SPIKES)
-                        {
-                            threshold = -70;
-                        }
+                        threshold = -70;
 
                     DebugPrintf("Spikes checks applied. Threshold now: %d",(signed char) threshold);
                 }
         }
 
+    //Final Threshold is set
     DebugPrintf("Threshold set for %d is %d.",gBattleMons[gActiveBattler].species,(signed char) threshold);
 
     // Find the score of the move being used by the AI
@@ -437,6 +456,7 @@ static bool8 ShouldSwitchIfLowScore(void)
             BatonPassChosen = TRUE;
     }
 
+    //Final Max Score is set
     DebugPrintf("Max score found for %d is %d.",gBattleMons[gActiveBattler].species,maxScore);
 
     if ((maxScore + Random() % 2) < threshold && !(BatonPassChosen))
