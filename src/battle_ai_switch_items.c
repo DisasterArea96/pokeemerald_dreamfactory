@@ -826,7 +826,7 @@ u8 GetMostSuitableMonToSwitchInto(void)
     else
         party = gEnemyParty;
 
-    activeMonHP = 0;
+    activeMonHP = gBattleMons[gActiveBattler].hp;
 
     if (activeMonHP > 0)
         {
