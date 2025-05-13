@@ -13,7 +13,9 @@
 #include "constants/items.h"
 #include "constants/moves.h"
 
-// this file's functions+
+#define AI_THINKING_STRUCT ((struct AI_ThinkingStruct *)(gBattleResources->ai))
+
+// this file's functions
 static bool8 ShouldUseItem(void);
 
 static bool8 ShouldSwitchIfPerishSong(void)
@@ -559,6 +561,7 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     if ((maxScore + Random() % 2) < threshold && !(BatonPassChosen))
     {
+        AI_THINKING_STRUCT->chosenMonId = 0;
         *(gBattleStruct->AI_monToSwitchIntoId + gActiveBattler) = PARTY_SIZE;
         BtlController_EmitTwoReturnValues(BUFFER_B, B_ACTION_SWITCH, 0);
         return TRUE;
@@ -648,13 +651,13 @@ static bool8 ShouldSwitch(void)
 
     if (availableToSwitch == 0)
         return FALSE;
-    if (ShouldSwitchIfWonderGuard())
-        return TRUE;
     if (ShouldSwitchIfPerishSong())
+        return TRUE;
+    if (ShouldSwitchIfLowScore())
         return TRUE;
     if (ShouldSwitchIfNaturalCure())
         return TRUE;
-    if (ShouldSwitchIfLowScore())
+    if (ShouldSwitchIfWonderGuard())
         return TRUE;
 
     return FALSE;
@@ -771,6 +774,7 @@ u8 GetMostSuitableMonToSwitchInto(void)
 {
     u8 opposingBattler;
     s32 bestDmg;
+    u8 activeMonHP;
     u8 bestMonId;
     u8 battlerIn1, battlerIn2;
     s32 firstId;
@@ -822,32 +826,41 @@ u8 GetMostSuitableMonToSwitchInto(void)
     else
         party = gEnemyParty;
 
-    bestSpeed = 0;
+    activeMonHP = 0;
 
-    // Find the fastest Pokemon
-    for (i = firstId; i < lastId; i++)
-    {
-        if ((u16)(GetMonData(&party[i], MON_DATA_SPECIES)) == SPECIES_NONE)
-            continue;
-        if (GetMonData(&party[i], MON_DATA_HP) == 0)
-            continue;
-        if (gBattlerPartyIndexes[battlerIn1] == i)
-            continue;
-        if (gBattlerPartyIndexes[battlerIn2] == i)
-            continue;
-        if (i == *(gBattleStruct->monToSwitchIntoId + battlerIn1))
-            continue;
-        if (i == *(gBattleStruct->monToSwitchIntoId + battlerIn2))
-            continue;
-
-        consideredSpeed = GetMonData(&party[i], MON_DATA_SPEED);
-
-        if (consideredSpeed > bestSpeed)
+    if (activeMonHP > 0)
         {
-            bestSpeed = consideredSpeed;
-            bestMonId = i;
+            bestMonId = gBattleResources->ai->chosenMonId;
         }
-    }
+    else
+        {
+            bestSpeed = 0;
+
+            // Find the fastest Pokemon
+            for (i = firstId; i < lastId; i++)
+            {
+                if ((u16)(GetMonData(&party[i], MON_DATA_SPECIES)) == SPECIES_NONE)
+                    continue;
+                if (GetMonData(&party[i], MON_DATA_HP) == 0)
+                    continue;
+                if (gBattlerPartyIndexes[battlerIn1] == i)
+                    continue;
+                if (gBattlerPartyIndexes[battlerIn2] == i)
+                    continue;
+                if (i == *(gBattleStruct->monToSwitchIntoId + battlerIn1))
+                    continue;
+                if (i == *(gBattleStruct->monToSwitchIntoId + battlerIn2))
+                    continue;
+
+                consideredSpeed = GetMonData(&party[i], MON_DATA_SPEED);
+
+                if (consideredSpeed > bestSpeed)
+                {
+                    bestSpeed = consideredSpeed;
+                    bestMonId = i;
+                }
+            }
+        }
 
     return bestMonId;
 }
