@@ -35,11 +35,14 @@ static bool8 ShouldSwitchIfPerishSong(void)
 
 static bool8 ShouldSwitchIfLowScore(void)
 {
-    s32 i, j;
+    s32 i, j, firstId, lastId;
     s8 currentScore;
+    u8 *activeBattlerPtr;
     u8 *dynamicMoveType;
-    u8 aiCanFaint, BatonPassChosen, damageVar, consideredEffect, isFaster, hasPriority, hasWishCombo, moveFlags, targetCanFaint, teamHasRapidSpin;
+    u8 aiCanFaint, battlerIn1, battlerIn2, BatonPassChosen, chosenSwitchIn, damageVar, consideredEffect, isFaster, hasPriority, hasWishCombo, moveFlags, targetCanFaint, teamHasRapidSpin;
     u16 hp, species;
+    s8 maxSwitchInScore = 0;
+    s8 switchInScore = 0;
     s8 maxScore = 0;
     s8 threshold = 92;
 
@@ -459,9 +462,62 @@ static bool8 ShouldSwitchIfLowScore(void)
     //Final Max Score is set
     DebugPrintf("Max score found for %d is %d.",gBattleMons[gActiveBattler].species,maxScore);
 
+    //Set battler IDs for validation in determining which pokemon to switch in
+    if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+    {
+        battlerIn1 = *activeBattlerPtr;
+        if (gAbsentBattlerFlags & gBitTable[GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(*activeBattlerPtr)))])
+            battlerIn2 = *activeBattlerPtr;
+        else
+            battlerIn2 = GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(*activeBattlerPtr)));
+    }
+    else
+    {
+        battlerIn1 = *activeBattlerPtr;
+        battlerIn2 = *activeBattlerPtr;
+    }
+
+    //Set IDs for looping for pokemon in party to choose from
+    if (gBattleTypeFlags & (BATTLE_TYPE_TWO_OPPONENTS | BATTLE_TYPE_TOWER_LINK_MULTI))
+    {
+        if ((gActiveBattler & BIT_FLANK) == B_FLANK_LEFT)
+            firstId = 0, lastId = PARTY_SIZE / 2;
+        else
+            firstId = PARTY_SIZE / 2, lastId = PARTY_SIZE;
+    }
+    else
+    {
+        firstId = 0, lastId = PARTY_SIZE;
+    }
+
+    for (i = firstId; i < lastId; i++)
+    {
+        // Skip over invalid options
+        if ((u16)(GetMonData(&gEnemyParty[i], MON_DATA_SPECIES)) == SPECIES_NONE)
+            continue;
+        if (GetMonData(&gEnemyParty[i], MON_DATA_HP) == 0)
+            continue;
+        if (gBattlerPartyIndexes[battlerIn1] == i)
+            continue;
+        if (gBattlerPartyIndexes[battlerIn2] == i)
+            continue;
+        if (i == *(gBattleStruct->monToSwitchIntoId + battlerIn1))
+            continue;
+        if (i == *(gBattleStruct->monToSwitchIntoId + battlerIn2))
+            continue;
+
+
+
+
+        //If this pokemon has a higher switch-in score, then set it to the chosen switch-in. Note that this is not perfectly random for teams of more than 3 pokemon.
+        if (switchInScore > maxSwitchInScore
+            || (switchInScore == maxSwitchInScore && Random() % 2))
+            chosenSwitchIn = i;
+    }
+
     if ((maxScore + Random() % 2) < threshold && !(BatonPassChosen))
     {
-        AI_THINKING_STRUCT->chosenMonId = 0;
+        AI_THINKING_STRUCT->chosenMonId = chosenSwitchIn;
         *(gBattleStruct->AI_monToSwitchIntoId + gActiveBattler) = PARTY_SIZE;
         BtlController_EmitTwoReturnValues(BUFFER_B, B_ACTION_SWITCH, 0);
         return TRUE;
@@ -498,6 +554,7 @@ static bool8 ShouldSwitch(void)
         return FALSE;
 
     availableToSwitch = 0;
+
     if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
     {
         battlerIn1 = *activeBattlerPtr;
