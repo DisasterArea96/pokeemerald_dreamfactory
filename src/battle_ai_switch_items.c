@@ -35,12 +35,12 @@ static bool8 ShouldSwitchIfPerishSong(void)
 
 static bool8 ShouldSwitchIfLowScore(void)
 {
-    s32 i, j, firstId, lastId;
+    s32 i, j, k, firstId, lastId;
     s8 currentScore;
     u8 *activeBattlerPtr;
     u8 *dynamicMoveType;
-    u8 aiCanFaint, battlerIn1, battlerIn2, BatonPassChosen, chosenSwitchIn, damageVar, consideredEffect, isFaster, hasPriority, hasWishCombo, moveFlags, targetCanFaint, teamHasRapidSpin;
-    u16 hp, species;
+    u8 aiCanFaint, battlerIn1, battlerIn2, BatonPassChosen, canKoShedinja, chosenSwitchIn, damageVar, consideredEffect, isFaster, hasHaze, hasIngrain, hasPerish, hasPriority, hasRoar, hasSpecialAttack, hasWW, hasWishCombo, monAbility, monSpecies, monType1, monType2, moveFlags, moveType, movesChecked, neutralEffectiveFound, notVeryEffectiveFound, physicalMoveFound, sleepMoveFound, statsRaised, statusImmune, superEffectiveFound, targetCanFaint, targetLastMove, targetLockedMove, teamHasRapidSpin;
+    u16 currentMove2, hp, species;
     s8 maxSwitchInScore = 0;
     s8 switchInScore = 0;
     s8 maxScore = 0;
@@ -196,7 +196,7 @@ static bool8 ShouldSwitchIfLowScore(void)
                 {
                     gCurrentMove = gBattleMons[gBattlerTarget].moves[i];
 
-                    moveFlags = AI_TypeCalc(gCurrentMove, gBattlerTarget, gActiveBattler);
+                    moveFlags = AI_TypeCalc(gCurrentMove, gActiveBattler, ABILITY_WONDER_GUARD);
 
                     // If the opponent has an attacking move that can KO shedinja
                     if (gBattleMoves[gBattleMons[gBattlerTarget].moves[i]].power > 0
@@ -253,7 +253,7 @@ static bool8 ShouldSwitchIfLowScore(void)
                 {
                     gCurrentMove = gBattleMons[gActiveBattler].moves[i];
 
-                    moveFlags = AI_TypeCalc(gCurrentMove, gActiveBattler, gBattlerTarget);
+                    moveFlags = AI_TypeCalc(gCurrentMove, gBattlerTarget, ABILITY_WONDER_GUARD);
 
                     // If the player an attacking move that can KO shedinja
                     if (gBattleMoves[gBattleMons[gActiveBattler].moves[i]].power > 0
@@ -407,7 +407,11 @@ static bool8 ShouldSwitchIfLowScore(void)
                     species = GetMonData(&gEnemyParty[i], MON_DATA_SPECIES);
                     hp = GetMonData(&gEnemyParty[i], MON_DATA_HP);
 
-                    if (species != SPECIES_NONE && species != SPECIES_EGG && hp != 0 && teamHasRapidSpin == FALSE)
+                    if (species != SPECIES_NONE
+                        && species != SPECIES_EGG
+                        && hp != 0
+                        && teamHasRapidSpin == FALSE
+                    )
                         {
                             //check each move
                             for (j = 0; j < MAX_MON_MOVES; j++)
@@ -455,7 +459,9 @@ static bool8 ShouldSwitchIfLowScore(void)
         }
 
         //Find whether Baton Pass could have been chosen, so the AI does not switch if it has chosen to use Baton Pass
-        if (maxScore == currentScore && gBattleMoves[gBattleMons[gActiveBattler].moves[i]].effect == EFFECT_BATON_PASS)
+        if (maxScore == currentScore
+            && gBattleMoves[gBattleMons[gActiveBattler].moves[i]].effect == EFFECT_BATON_PASS
+        )
             BatonPassChosen = TRUE;
     }
 
@@ -506,26 +512,652 @@ static bool8 ShouldSwitchIfLowScore(void)
         if (i == *(gBattleStruct->monToSwitchIntoId + battlerIn2))
             continue;
 
+        //Initialise all pokemon-specific variables
+        canKoShedinja = hasHaze = hasIngrain = hasPerish = hasRoar = hasSpecialAttack = hasWW = neutralEffectiveFound = notVeryEffectiveFound = physicalMoveFound = statsRaised = statusImmune = superEffectiveFound = 0;
+        monSpecies = GetMonData(&gEnemyParty[i], MON_DATA_SPECIES);
+        monAbility = GetAbilityBySpecies(monSpecies, GetMonData(&gEnemyParty[i], MON_DATA_ABILITY_NUM));
+        monType1 = gSpeciesInfo[monSpecies].types[0];
+        monType2 = gSpeciesInfo[monSpecies].types[1];
+        targetLastMove = gLastMoves[gBattlerTarget];
+        targetLockedMove = gLockedMoves[gBattlerTarget];
 
+        //Set an initial score based on the HP% divided by 15. This gives a range of 0-6
+        switchInScore = (GetMonData(&gEnemyParty[i], MON_DATA_HP) * 100)
+                        / (GetMonData(&gEnemyParty[i], MON_DATA_MAX_HP) * 15);
 
+        //Add a baseline of 19, to prevent underflows
+        switchInScore += 19;
+
+        //Initial score set
+        DebugPrintf("switch-in score initialised at %d for %d.",switchInScore,GetMonData(&gEnemyParty[i], MON_DATA_SPECIES));
+
+        //If the AI is faster than the opponent, boost the score slightly
+        if (GetMonData(&gEnemyParty[i], MON_DATA_SPEED) > gBattleMons[gBattlerTarget].speed)
+            switchInScore += 1;
+
+        //Check if safeguard is up, the candidate Pokemon has Natural Cure, or is already statused
+        if (gSideStatuses[B_SIDE_OPPONENT] & SIDE_STATUS_SAFEGUARD
+            || monAbility == ABILITY_NATURAL_CURE
+            || GetMonData(&gEnemyParty[i], MON_DATA_STATUS) & STATUS1_ANY
+        )
+            statusImmune = 1;
+
+        //Loop through the moves of the candidate pokemon and set certain variables
+        for (j = 0; j < MAX_MON_MOVES; j++)
+            {
+                //Get the move ID
+                gCurrentMove = GetMonData(&gEnemyParty[i], MON_DATA_MOVE1 + j);
+
+                //if refresh or rest
+                if (gCurrentMove == MOVE_REST
+                    || gCurrentMove == MOVE_REFRESH
+                )
+                    statusImmune = 1;
+
+                //Check whether the mon has a physical attack which is affected meaningfully by burn
+                if (gBattleMoves[gCurrentMove].power > 0
+                    && IS_TYPE_PHYSICAL(gBattleMoves[gCurrentMove].type)
+                    && gBattleMoves[gCurrentMove].effect != EFFECT_LEVEL_DAMAGE
+                    && gBattleMoves[gCurrentMove].effect != EFFECT_RAPID_SPIN
+                    && gBattleMoves[gCurrentMove].effect != EFFECT_SNORE
+                    && gBattleMoves[gCurrentMove].effect != EFFECT_SONICBOOM
+                    && gBattleMoves[gCurrentMove].effect != EFFECT_SUPER_FANG
+                    && gBattleMoves[gCurrentMove].effect != EFFECT_THIEF
+                    && gBattleMoves[gCurrentMove].effect != EFFECT_TRAP
+                )
+                    physicalMoveFound = 1;
+
+                //Check for snore & sleep talk
+                if (gBattleMoves[gCurrentMove].effect == EFFECT_SNORE
+                    || gBattleMoves[gCurrentMove].effect == EFFECT_SLEEP_TALK
+                )
+                    sleepMoveFound = 1;
+
+                //If the opponent is shedinja, check if there is a move can KO it.
+                if (gBattleMons[gBattlerTarget].ability == ABILITY_WONDER_GUARD
+                    && gCurrentMove != MOVE_NONE
+                    && gCurrentMove != MOVE_UNAVAILABLE
+                )
+                    {
+                        moveFlags = AI_TypeCalc(gCurrentMove, gBattlerTarget, ABILITY_WONDER_GUARD);
+
+                        // If the player an attacking move that can KO shedinja
+                        if (gBattleMoves[gBattleMons[gActiveBattler].moves[i]].power > 0
+                            && moveFlags & MOVE_RESULT_SUPER_EFFECTIVE
+                        )
+                            canKoShedinja = 1;
+
+                        //Check each effect that can KO shedinja
+                        for (j = 0; j < ARRAY_COUNT(shedinjaKOEffects); j++)
+                            {
+                                if (gBattleMoves[gBattleMons[gActiveBattler].moves[i]].effect == shedinjaKOEffects[j])
+                                   canKoShedinja = 1;
+                            }
+                    }
+
+                if (gCurrentMove == MOVE_ROAR)
+                    hasRoar = 1;
+
+                if (gCurrentMove == MOVE_WHIRLWIND)
+                    hasWW = 1;
+
+                if (gCurrentMove == MOVE_HAZE)
+                    hasHaze = 1;
+
+                if (gCurrentMove == MOVE_PERISH_SONG)
+                    hasPerish = 1;
+            }
+
+        //If the opponent has choice band and has attacked, the AI can take advantage of it
+        if (gBattleMons[gBattlerTarget].item == ITEM_CHOICE_BAND
+            && targetLastMove != MOVE_NONE
+            && targetLastMove != MOVE_UNAVAILABLE
+        )
+            {
+                //Check if the move is a status move or an attack
+                if (gBattleMoves[targetLastMove].power == 0)
+                    {
+                        if (targetLastMove == MOVE_TOXIC)
+                            {
+                                if (monType1 == TYPE_POISON
+                                    || monType1 == TYPE_STEEL
+                                    || monType2 == TYPE_POISON
+                                    || monType2 == TYPE_STEEL
+                                    || monAbility == ABILITY_IMMUNITY
+                                )
+                                    {
+                                        switchInScore += 12;
+                                    }
+                                else
+                                    {
+                                        if (statusImmune)
+                                            switchInScore += 5;
+                                    }
+                            }
+
+                        if (targetLastMove == MOVE_GLARE)
+                            {
+                                if (monType1 == TYPE_GHOST
+                                    || monType2 == TYPE_GHOST
+                                    || monAbility == ABILITY_LIMBER
+                                )
+                                    {
+                                        switchInScore += 12;
+                                    }
+                                else
+                                    {
+                                        if (statusImmune)
+                                            switchInScore += 5;
+                                    }
+                            }
+
+                        if (targetLastMove == MOVE_THUNDER_WAVE)
+                            {
+                                if (monType1 == TYPE_GROUND
+                                    || monType2 == TYPE_GROUND
+                                    || monAbility == ABILITY_LIMBER
+                                )
+                                    {
+                                        switchInScore += 12;
+                                    }
+                                else
+                                    {
+                                        if (statusImmune)
+                                            switchInScore += 5;
+                                    }
+                            }
+
+                        if (targetLastMove == MOVE_STUN_SPORE)
+                            {
+                                if (monAbility == ABILITY_LIMBER)
+                                    {
+                                        switchInScore += 12;
+                                    }
+                                else
+                                    {
+                                        if (statusImmune)
+                                            switchInScore += 5;
+                                    }
+                            }
+
+                        // special handling for wisp, as we want to discourage physical attackers coming in especially
+                        if (targetLastMove == MOVE_WILL_O_WISP)
+                            {
+                                if (monType1 == TYPE_FIRE
+                                    || monType2 == TYPE_FIRE
+                                    || monAbility == ABILITY_WATER_VEIL
+                                )
+                                    {
+                                        switchInScore += 12;
+                                    }
+                                else
+                                    {
+                                        if (statusImmune)
+                                            {
+                                                switchInScore += 5;
+                                            }
+                                        else
+                                            {
+                                                //If the candidate mon has a physical attack, make it less likely to be switched in
+                                                if (physicalMoveFound)
+                                                    switchInScore -= 5;
+                                            }
+                                    }
+                            }
+
+                        if (gBattleMoves[targetLastMove].effect == EFFECT_SLEEP)
+                            {
+                                if (monAbility == ABILITY_INSOMNIA
+                                    || monAbility == ABILITY_VITAL_SPIRIT
+                                )
+                                    {
+                                        switchInScore += 12;
+                                    }
+                                else
+                                    {
+                                        //If status immune, early bird, or has snore/sleep talk
+                                        if (statusImmune
+                                            || monAbility == ABILITY_EARLY_BIRD
+                                            || sleepMoveFound
+                                        )
+                                            switchInScore += 5;
+                                    }
+                            }
+
+                        if (targetLastMove == MOVE_LEECH_SEED
+                            && (monType1 == TYPE_GRASS
+                                || monType2 == TYPE_GRASS
+                                || monAbility == ABILITY_LIQUID_OOZE)
+                        )
+                            switchInScore += 12;
+
+                        movesChecked = 1;
+                    }
+                else
+                    {
+                        // Get the move type to perform extra checks that TypeCalc misses. Ironically, it's all special types, so mostly relevant with TrickBand
+                        moveType = gBattleMoves[gCurrentMove].type;
+
+                        //If they are locked into a fire-type move
+                        if (moveType == TYPE_FIRE
+                            && monAbility == ABILITY_FLASH_FIRE
+                        )
+                            {
+                                switchInScore += 12;
+                                movesChecked = 1;
+                            }
+
+                        //If they are locked into a water-type move
+                        if (moveType == TYPE_WATER
+                            && monAbility == ABILITY_WATER_ABSORB
+                        )
+                            {
+                                switchInScore += 12;
+                                movesChecked = 1;
+                            }
+
+                        //If they are locked into a electric-type move
+                        if (moveType == TYPE_ELECTRIC
+                            && monAbility == ABILITY_VOLT_ABSORB
+                        )
+                            {
+                                switchInScore += 12;
+                                movesChecked = 1;
+                            }
+
+                        if (!(movesChecked))
+                            {
+                                //Pull the flags
+                                moveFlags = AI_TypeCalc(gCurrentMove, monSpecies, monAbility);
+
+                                // check type matchup, then adjust score accordingly
+                                if (moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
+                                    switchInScore -= 5;
+                                if (moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
+                                    switchInScore += 7;
+                                if (moveFlags & MOVE_RESULT_DOESNT_AFFECT_FOE)
+                                    switchInScore += 12;
+
+                                movesChecked = 1;
+                            }
+                    }
+            }
+
+        //Opponent has used Bounce or Fly
+        if (gStatuses3[gBattlerTarget] & STATUS3_ON_AIR)
+            {
+                //Pull the flags
+                moveFlags = AI_TypeCalc(MOVE_FLY, monSpecies, monAbility);
+
+                // check type matchup, then adjust score accordingly
+                if (moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
+                    switchInScore -= 5;
+                if (moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
+                    switchInScore += 7;
+
+                movesChecked = 1;
+            }
+
+        //Opponent has used Dig
+        if (gStatuses3[gBattlerTarget] & STATUS3_UNDERGROUND)
+            {
+                //Pull the flags
+                moveFlags = AI_TypeCalc(MOVE_DIG, monSpecies, monAbility);
+
+                // check type matchup, then adjust score accordingly
+                if (moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
+                    switchInScore -= 5;
+                if (moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
+                    switchInScore += 7;
+                if (moveFlags & MOVE_RESULT_DOESNT_AFFECT_FOE)
+                    switchInScore += 12;
+
+                movesChecked = 1;
+            }
+
+        //Opponent has used Dive
+        if (gStatuses3[gBattlerTarget] & STATUS3_UNDERWATER)
+            {
+                if (monAbility == ABILITY_WATER_ABSORB)
+                    {
+                        switchInScore += 12;
+                    }
+                else {
+                    //Pull the flags
+                    moveFlags = AI_TypeCalc(MOVE_DIVE, monSpecies, monAbility);
+
+                    // check type matchup, then adjust score accordingly
+                    if (moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
+                        switchInScore -= 5;
+                    if (moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
+                        switchInScore += 7;
+                }
+
+                movesChecked = 1;
+                hasSpecialAttack = 1;
+            }
+
+        //If the target is locked into a move, suck as Sky Attack or Rollout, then go to a pokemon that resists it
+        if(!(movesChecked)
+            && gBattleMons[gBattlerTarget].status2 == STATUS2_MULTIPLETURNS
+            && targetLockedMove != MOVE_HYPER_BEAM
+        )
+            {
+                moveFlags = AI_TypeCalc(targetLockedMove, monSpecies, monAbility);
+
+                // check type matchup, then adjust score accordingly
+                if (moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
+                    switchInScore -= 5;
+                if (moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
+                    switchInScore += 7;
+                if (moveFlags & MOVE_RESULT_DOESNT_AFFECT_FOE)
+                    switchInScore += 12;
+
+                //If the attack is not physical, then set hasSpecialAttack
+                if(!(IS_TYPE_PHYSICAL(gBattleMoves[targetLockedMove].type)))
+                    hasSpecialAttack = 1;
+
+                movesChecked = 1;
+            }
+
+        //If the last used move was hyper beam, and the opponent is charging, don't treat the opponent as having special attacks
+        if (gBattleMons[gBattlerTarget].status2 == STATUS2_MULTIPLETURNS
+            && targetLockedMove == MOVE_HYPER_BEAM
+        )
+            {
+                hasSpecialAttack = 0;
+                movesChecked = 1;
+            }
+
+        //If the opponent is shedinja, lower the score if Shedinja can't be KO'd. Otherwise, increase it slightly
+        if (gBattleMons[gBattlerTarget].ability == ABILITY_WONDER_GUARD)
+            {
+                if (canKoShedinja)
+                    switchInScore += 3;
+                else
+                    switchInScore -= 5;
+
+                movesChecked = 1;
+            }
+
+        //If none of the special cases above apply, then loop through the opponent's moves
+        if (!(movesChecked))
+        {
+            //Loop through each of the moves
+            for (j = 0; j < MAX_MON_MOVES; j++)
+                {
+                    //Get the move ID
+                    gCurrentMove = gBattleMons[gBattlerTarget].moves[j];
+
+                    //Check for ingrain
+                    if (gCurrentMove == MOVE_INGRAIN)
+                        hasIngrain = 1;
+
+                    //Pull the flags
+                    moveFlags = AI_TypeCalc(gCurrentMove, monSpecies, monAbility);
+
+                    //If the candidate Pokemon is Shedinja, set the canKoShedinja flag if the target can KO Shedinja
+                    if (monAbility == ABILITY_WONDER_GUARD)
+                        {
+                            // If the target an attacking move that can KO shedinja
+                            if (gBattleMoves[gCurrentMove].power > 0
+                                && moveFlags & MOVE_RESULT_SUPER_EFFECTIVE
+                            )
+                                canKoShedinja = 1;
+
+                            //Check each effect that can KO shedinja
+                            for (k = 0; k < ARRAY_COUNT(shedinjaKOEffects); k++)
+                                {
+                                    if (gBattleMoves[gCurrentMove].effect == shedinjaKOEffects[k])
+                                        canKoShedinja = 1;
+                                }
+                        }
+                    else
+                        {
+                            //If the move does damage
+                            if (gBattleMoves[gCurrentMove].power > 0)
+                                {
+                                    //Set flags for super effective, neutral, and not very effective moves, and adjust the score accordingly after the loop
+                                    if (moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
+                                        superEffectiveFound = 1;
+
+                                    if (!(moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
+                                        && !(moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
+                                        && !(moveFlags & MOVE_RESULT_DOESNT_AFFECT_FOE)
+                                    )
+                                        neutralEffectiveFound = 1;
+
+                                    if (moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
+                                        notVeryEffectiveFound = 1;
+
+                                    //Set a flag if the attack is a special attack & not fixed damage
+                                    if(!(IS_TYPE_PHYSICAL(gBattleMoves[gCurrentMove].type)))
+                                        hasSpecialAttack = 1;
+
+                                    //If the opponent has focus punch and the user does not resist it
+                                    if(gCurrentMove == MOVE_FOCUS_PUNCH
+                                        && !(moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
+                                        && !(moveFlags & MOVE_RESULT_DOESNT_AFFECT_FOE)
+                                        && Random() % 3
+                                    )
+                                        switchInScore -= 3;
+
+                                    //If the opponent has zap cannon, and the candidate pokemon can be paralyzed by it, then score -3
+                                    if (gCurrentMove == MOVE_ZAP_CANNON
+                                        && (monAbility == ABILITY_VOLT_ABSORB
+                                            || monAbility == ABILITY_LIMBER
+                                            || monAbility == ABILITY_SHIELD_DUST
+                                            || monType1 == TYPE_GROUND
+                                            || monType2 == TYPE_GROUND)
+                                    )
+                                        switchInScore -= 3;
+
+                                    //If the opponent has explosion, then plus for ghost/steel/rock/damp/low hp (random chance)
+                                    if(gBattleMoves[gCurrentMove].effect == EFFECT_EXPLOSION
+                                        && !(Random() % 5)
+                                    )
+                                        {
+                                            if (monAbility == ABILITY_DAMP
+                                                || moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE
+                                                || moveFlags & MOVE_RESULT_DOESNT_AFFECT_FOE
+                                                || (GetMonData(&gEnemyParty[i], MON_DATA_HP) * 100
+                                                    < GetMonData(&gEnemyParty[i], MON_DATA_MAX_HP) * 30)
+                                            )
+                                                switchInScore += 12;
+                                        }
+
+                                    if (gCurrentMove == MOVE_SOLAR_BEAM
+                                        && gBattleWeather & B_WEATHER_SUN
+                                        && (monAbility == ABILITY_DRIZZLE
+                                            || monAbility == ABILITY_SAND_STREAM)
+                                    )
+                                        switchInScore += 7;
+
+                                    if (gCurrentMove == MOVE_THUNDER
+                                        && gBattleWeather & B_WEATHER_RAIN
+                                        && monAbility == ABILITY_DROUGHT
+                                    )
+                                        switchInScore += 7;
+                                }
+                            else
+                                {
+                                    //If the opponent has Leech Seed, and the candidate poekmon punishes it, +7 score
+                                    if (gCurrentMove == MOVE_LEECH_SEED
+                                        && (monAbility == ABILITY_LIQUID_OOZE
+                                            || monType1 == TYPE_GRASS
+                                            || monType2 == TYPE_GRASS)
+                                    )
+                                        switchInScore += 7;
+
+                                    if (!(statusImmune))
+                                        {
+                                            //If the opponent has Toxic
+                                            if (gCurrentMove == MOVE_TOXIC
+                                                && !(monAbility == ABILITY_IMMUNITY
+                                                    || monType1 == TYPE_POISON
+                                                    || monType2 == TYPE_POISON
+                                                    || monType1 == TYPE_STEEL
+                                                    || monType2 == TYPE_STEEL)
+                                            )
+                                                switchInScore -= 2;
+
+                                            //If the opponent has Glare
+                                            if (gCurrentMove == MOVE_GLARE
+                                                && !(monAbility == ABILITY_LIMBER
+                                                    || monType1 == TYPE_GHOST
+                                                    || monType2 == TYPE_GHOST)
+                                            )
+                                                switchInScore -= 3;
+
+                                            //If the opponent has Thunder Wave
+                                            if (gCurrentMove == MOVE_THUNDER_WAVE
+                                                && !(monAbility == ABILITY_LIMBER
+                                                    || monType1 == TYPE_GROUND
+                                                    || monType2 == TYPE_GROUND)
+                                            )
+                                                switchInScore -= 3;
+
+                                            //If the opponent has Stun Spore
+                                            if (gCurrentMove == MOVE_STUN_SPORE
+                                                && !(monAbility == ABILITY_LIMBER)
+                                            )
+                                                switchInScore -= 3;
+
+                                            //If the opponent has Will-o-Wisp
+                                            if (gCurrentMove == MOVE_WILL_O_WISP
+                                                && !(monAbility == ABILITY_WATER_VEIL
+                                                    || monType1 == TYPE_FIRE
+                                                    || monType2 == TYPE_FIRE)
+                                            )
+                                                {
+                                                    switchInScore -= 2;
+
+                                                    if (physicalMoveFound)
+                                                        switchInScore -= 3;
+                                                }
+
+                                            //If the opponent has a sleep move
+                                            if (gBattleMoves[gCurrentMove].effect == EFFECT_SLEEP)
+                                                {
+                                                    if(monAbility == ABILITY_INSOMNIA
+                                                        || monAbility == ABILITY_VITAL_SPIRIT
+                                                        || sleepMoveFound)
+                                                        {
+                                                            switchInScore += 7;
+                                                        }
+                                                    else
+                                                        {
+                                                            switchInScore -= 3;
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+                }
+
+            //If the candidate pokemon is Shedinja and it can't be KO'd by the target, then the AI should want to bring it in
+            if (monAbility == ABILITY_WONDER_GUARD)
+                {
+                    if (canKoShedinja)
+                        switchInScore -= 5;
+                    else
+                        switchInScore += 12;
+                }
+
+            //Otherwise, check type matchup
+            else
+                {
+                    if (superEffectiveFound)
+                        {
+                            switchInScore -= 5;
+                        }
+                    else
+                        {
+                            if (neutralEffectiveFound)
+                                {
+                                    switchInScore -= 1;
+                                }
+                            else
+                                {
+                                    if (notVeryEffectiveFound)
+                                        {
+                                            switchInScore += 7;
+                                        }
+                                    else
+                                        {
+                                            switchInScore += 12;
+                                        }
+                                }
+                        }
+                }
+
+            //Check if opponent's stat levels are above the minimum
+            for (i = 1; i < NUM_BATTLE_STATS; i++)
+                {
+                    if (gBattleMons[gBattlerTarget].statStages[i] > DEFAULT_STAT_STAGE)
+                    {
+                            statsRaised = 1;
+                            break;
+                    }
+                }
+
+            //If the opponent has stat boosts, the AI should try and force them out
+            if (statsRaised)
+                {
+                    //If there is a phazing option available that works, then +7 score
+                    if(hasHaze
+                        || (hasPerish
+                            && gBattleMons[gBattlerTarget].ability != ABILITY_SOUNDPROOF)
+                        || (hasWW
+                            && hasIngrain == 0
+                            && gBattleMons[gBattlerTarget].ability != ABILITY_SUCTION_CUPS)
+                        || (hasRoar
+                            && hasIngrain == 0
+                            && gBattleMons[gBattlerTarget].ability != ABILITY_SOUNDPROOF
+                            && gBattleMons[gBattlerTarget].ability != ABILITY_SUCTION_CUPS)
+                    )
+                        switchInScore += 7;
+                }
+        }
+
+        //If the opponent only has physical attacks, or is locked into a physical attack:
+        if(monAbility == ABILITY_INTIMIDATE
+            && !(hasSpecialAttack)
+        )
+            switchInScore += 3;
+
+        //Lower the score to bring it in range for use with thresholds. Anything below 23 is a bad score. The starting point is 19 plus the HP factor.
+        if (switchInScore <= 23)
+            switchInScore = 0;
+        else
+            switchInScore -= 23;
+
+        //Initial score set
+        DebugPrintf("switch-in final score = %d.",switchInScore);
 
         //If this pokemon has a higher switch-in score, then set it to the chosen switch-in. Note that this is not perfectly random for teams of more than 3 pokemon.
         if (switchInScore > maxSwitchInScore
-            || (switchInScore == maxSwitchInScore && Random() % 2))
+            || (switchInScore == maxSwitchInScore && Random() % 2)
+        )
             chosenSwitchIn = i;
     }
 
-    if ((maxScore + Random() % 2) < threshold && !(BatonPassChosen))
-    {
-        AI_THINKING_STRUCT->chosenMonId = chosenSwitchIn;
-        *(gBattleStruct->AI_monToSwitchIntoId + gActiveBattler) = PARTY_SIZE;
-        BtlController_EmitTwoReturnValues(BUFFER_B, B_ACTION_SWITCH, 0);
-        return TRUE;
-    }
+    //Set chosen switch-in. If the AI doesn't decide to switch, but chooses baton pass, then we want it to make use of the same logic.
+    AI_THINKING_STRUCT->chosenMonId = chosenSwitchIn;
+
+    //Final check to see if based on move score, threshold & quality of possible switch-ins, the AI should switch
+    if (maxScore + switchInScore + (Random() % 2) < threshold
+        && !(BatonPassChosen)
+    )
+        {
+            *(gBattleStruct->AI_monToSwitchIntoId + gActiveBattler) = PARTY_SIZE;
+            BtlController_EmitTwoReturnValues(BUFFER_B, B_ACTION_SWITCH, 0);
+            return TRUE;
+        }
     else
-    {
-        return FALSE;
-    }
+        {
+            return FALSE;
+        }
 }
 
 static bool8 ShouldSwitch(void)
@@ -588,11 +1220,11 @@ static bool8 ShouldSwitch(void)
 
     for (i = firstId; i < lastId; i++)
     {
-        if (GetMonData(&party[i], MON_DATA_HP) == 0)
+        if (GetMonData(&gEnemyParty[i], MON_DATA_HP) == 0)
             continue;
-        if (GetMonData(&party[i], MON_DATA_SPECIES_OR_EGG) == SPECIES_NONE)
+        if (GetMonData(&gEnemyParty[i], MON_DATA_SPECIES_OR_EGG) == SPECIES_NONE)
             continue;
-        if (GetMonData(&party[i], MON_DATA_SPECIES_OR_EGG) == SPECIES_EGG)
+        if (GetMonData(&gEnemyParty[i], MON_DATA_SPECIES_OR_EGG) == SPECIES_EGG)
             continue;
         if (i == gBattlerPartyIndexes[battlerIn1])
             continue;
@@ -669,7 +1301,7 @@ void AI_TrySwitchOrUseItem(void)
 
                     for (monToSwitchId = firstId; monToSwitchId < lastId; monToSwitchId++)
                     {
-                        if (GetMonData(&party[monToSwitchId], MON_DATA_HP) == 0)
+                        if (GetMonData(&gEnemyParty[monToSwitchId], MON_DATA_HP) == 0)
                             continue;
                         if (monToSwitchId == gBattlerPartyIndexes[battlerIn1])
                             continue;
@@ -781,20 +1413,64 @@ u8 GetMostSuitableMonToSwitchInto(void)
 
     activeMonHP = gBattleMons[gActiveBattler].hp;
 
+    //If this is a hard switch, or baton pass is called, then go to the pre-selected pokemon. Otherwise, run bespoke logic.
     if (activeMonHP > 0)
         {
             bestMonId = gBattleResources->ai->chosenMonId;
         }
     else
         {
+
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+    /////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             bestSpeed = 0;
 
             // Find the fastest Pokemon
             for (i = firstId; i < lastId; i++)
             {
-                if ((u16)(GetMonData(&party[i], MON_DATA_SPECIES)) == SPECIES_NONE)
+                if ((u16)(GetMonData(&gEnemyParty[i], MON_DATA_SPECIES)) == SPECIES_NONE)
                     continue;
-                if (GetMonData(&party[i], MON_DATA_HP) == 0)
+                if (GetMonData(&gEnemyParty[i], MON_DATA_HP) == 0)
                     continue;
                 if (gBattlerPartyIndexes[battlerIn1] == i)
                     continue;
@@ -805,7 +1481,7 @@ u8 GetMostSuitableMonToSwitchInto(void)
                 if (i == *(gBattleStruct->monToSwitchIntoId + battlerIn2))
                     continue;
 
-                consideredSpeed = GetMonData(&party[i], MON_DATA_SPEED);
+                consideredSpeed = GetMonData(&gEnemyParty[i], MON_DATA_SPEED);
 
                 if (consideredSpeed > bestSpeed)
                 {
@@ -851,9 +1527,9 @@ static bool8 ShouldUseItem(void)
 
     for (i = 0; i < PARTY_SIZE; i++)
     {
-        if (GetMonData(&party[i], MON_DATA_HP) != 0
-            && GetMonData(&party[i], MON_DATA_SPECIES_OR_EGG) != SPECIES_NONE
-            && GetMonData(&party[i], MON_DATA_SPECIES_OR_EGG) != SPECIES_EGG)
+        if (GetMonData(&gEnemyParty[i], MON_DATA_HP) != 0
+            && GetMonData(&gEnemyParty[i], MON_DATA_SPECIES_OR_EGG) != SPECIES_NONE
+            && GetMonData(&gEnemyParty[i], MON_DATA_SPECIES_OR_EGG) != SPECIES_EGG)
         {
             validMons++;
         }
