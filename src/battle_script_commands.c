@@ -5212,7 +5212,7 @@ static void Cmd_switchineffects(void)
     gSpecialStatuses[gActiveBattler].faintedHasReplacement = FALSE;
 
     if (!(gSideStatuses[GetBattlerSide(gActiveBattler)] & SIDE_STATUS_SPIKES_DAMAGED)
-        && (gSideStatuses[GetBattlerSide(gActiveBattler)] & SIDE_STATUS_SPIKES)
+        && gSideStatuses[GetBattlerSide(gActiveBattler)] & SIDE_STATUS_SPIKES
         && !IS_BATTLER_OF_TYPE(gActiveBattler, TYPE_FLYING)
         && gBattleMons[gActiveBattler].ability != ABILITY_LEVITATE)
     {
