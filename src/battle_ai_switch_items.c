@@ -1149,7 +1149,7 @@ static bool8 ShouldSwitchIfLowScore(void)
                                         }
                                     else
                                         {
-                                            switchInScore += 12;
+                                            switchInScore += 15;
                                         }
                                 }
                         }
