@@ -967,19 +967,19 @@ AI_CV_Sleep:
 	get_move_effect_from_result
 	if_not_equal EFFECT_SLEEP, AI_CV_Sleep_ItemCheck
 	if_has_move_with_effect AI_USER, EFFECT_SUBSTITUTE, AI_CV_Sleep_CheckSubstitute
-	goto AI_CV_Sleep_RandomPlus30
+	goto AI_CV_Sleep_RandomPlus3
 
 AI_CV_Sleep_CheckSubstitute:
 	if_can_use_substitute AI_USER, AI_CV_Sleep_CheckSubUp
-	goto AI_CV_Sleep_RandomPlus30
+	goto AI_CV_Sleep_RandomPlus3
 
 AI_CV_Sleep_CheckSubUp:
-	if_status2 AI_USER, STATUS2_SUBSTITUTE, AI_CV_Sleep_RandomPlus30
+	if_status2 AI_USER, STATUS2_SUBSTITUTE, AI_CV_Sleep_RandomPlus3
 	goto AI_CV_Sleep_ItemCheck
 
-AI_CV_Sleep_RandomPlus30:
+AI_CV_Sleep_RandomPlus3:
 	if_random_less_than 224, AI_CV_Sleep_ItemCheck
-	score +30
+	score +3
 AI_CV_Sleep_ItemCheck:
 	if_holds_item AI_TARGET, ITEM_CHESTO_BERRY, AI_CV_Sleep_ItemCheck_RandomMinus1
 	if_holds_item AI_TARGET, ITEM_LUM_BERRY, AI_CV_Sleep_ItemCheck_RandomMinus1

@@ -49,7 +49,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 battlerIn1, battlerIn2;
     u8 monAbility, monSpecies, monType1, monType2;
     u8 canKoShedinja, isFaster, statusImmune;
-    u8 hasHaze, hasPerish, hasPhysicalAttack, hasRapidSpin, hasRoar, hasSleepAtk, hasSpecialAttack, hasWW;
+    u8 hasHaze, hasPerish, hasPhysicalAttack, hasRapidSpin, hasRoar, hasSleepAtk, targetHasPhysicalAttack, hasWW;
     u8 targetNeutralEffectiveFound, targetNotVeryEffectiveFound, targetSuperEffectiveFound;
     u8 targetCanKoShedinja, targetHasIngrain, targetMoveType, targetMovesChecked, targetStatsRaised;
     u8 targetLastMove, targetLockedMove, targetPartySize;
@@ -57,7 +57,28 @@ static bool8 ShouldSwitchIfLowScore(void)
     s8 switchInScore = 0;
     s8 maxSwitchInScore = 0;
     s8 maxScore = 0;
-    s8 threshold = 92;
+    s8 threshold = 91;
+
+    /*
+
+    Some comments on the numbers:
+
+    Consider the following scenario
+    The AI has a reasonable first turn move, this would have a score of about 100-102
+    Suppose there is a pokemon in the back which resists all of the active pokemon's attacks.
+    Its score would be 10.
+    Suppose the AI can faint. This is +9-10 to the threshold, so a threshold of 100-101
+
+    The check is max move score + 0-1 < threshold + max switch score to trigger a switch.
+    In this case:
+    102 + 0-1 < 100-101 + 10, so 102-103 < 110-111
+    Guaranteeing a switch.
+
+    Suppose the best pokemon in the back is neutral to the pokemon that is active, We want it to sometimes come in when all pokemon are at full
+    100-102 + 0-1 < 100-101 + 2, so 100-103 < 102-103
+    i.e. 25% chance if the AI has a good attack, or a significantly higher chance if it doesnt
+
+    */
 
     //Initialising arrays
     u8 statBoostingEffects[] = {EFFECT_ATTACK_UP, EFFECT_ATTACK_UP_2, EFFECT_SPECIAL_ATTACK_UP, EFFECT_SPECIAL_ATTACK_UP_2, EFFECT_BELLY_DRUM, EFFECT_BULK_UP, EFFECT_CALM_MIND, EFFECT_CURSE, EFFECT_DRAGON_DANCE};
@@ -517,7 +538,7 @@ static bool8 ShouldSwitchIfLowScore(void)
             continue;
 
         //Initialise all pokemon-specific variables (candidate pokemon)
-        hasHaze = hasPerish = hasRoar = hasPhysicalAttack = hasSpecialAttack = hasWW = 0;
+        hasHaze = hasPerish = hasRoar = hasPhysicalAttack = targetHasPhysicalAttack = hasWW = 0;
         canKoShedinja = 0;
         statusImmune = 0;
 
@@ -783,6 +804,19 @@ static bool8 ShouldSwitchIfLowScore(void)
                                 targetMovesChecked = 1;
                             }
 
+                        //If the target has a physical attack
+                        if (IS_TYPE_PHYSICAL(targetMoveType)
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_HIDDEN_POWER
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_LEVEL_DAMAGE
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_RAPID_SPIN
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_SNORE
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_SONICBOOM
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_SUPER_FANG
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_THIEF
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_TRAP
+                            )
+                        targetHasPhysicalAttack = 1;
+
                         if (!(targetMovesChecked))
                             {
                                 //Pull the flags
@@ -814,6 +848,7 @@ static bool8 ShouldSwitchIfLowScore(void)
                     switchInScore += 7;
 
                 targetMovesChecked = 1;
+                targetHasPhysicalAttack = 1;
             }
 
         //Opponent has used Dig
@@ -831,6 +866,7 @@ static bool8 ShouldSwitchIfLowScore(void)
                     switchInScore += 12;
 
                 targetMovesChecked = 1;
+                targetHasPhysicalAttack = 1;
             }
 
         //Opponent has used Dive
@@ -852,7 +888,6 @@ static bool8 ShouldSwitchIfLowScore(void)
                 }
 
                 targetMovesChecked = 1;
-                hasSpecialAttack = 1;
             }
 
         //If the target is locked into a move, suck as Sky Attack or Rollout, then go to a pokemon that resists it
@@ -871,9 +906,9 @@ static bool8 ShouldSwitchIfLowScore(void)
                 if (moveFlags & MOVE_RESULT_DOESNT_AFFECT_FOE)
                     switchInScore += 12;
 
-                //If the attack is not physical, then set hasSpecialAttack
-                if(!(IS_TYPE_PHYSICAL(gBattleMoves[targetLockedMove].type)))
-                    hasSpecialAttack = 1;
+                //If the attack is not physical, then set targetHasPhysicalAttack
+                if(IS_TYPE_PHYSICAL(gBattleMoves[targetLockedMove].type))
+                    targetHasPhysicalAttack = 1;
 
                 targetMovesChecked = 1;
             }
@@ -883,7 +918,7 @@ static bool8 ShouldSwitchIfLowScore(void)
             && targetLockedMove == MOVE_HYPER_BEAM
         )
             {
-                hasSpecialAttack = 0;
+                targetHasPhysicalAttack = 1;
                 targetMovesChecked = 1;
             }
 
@@ -948,14 +983,18 @@ static bool8 ShouldSwitchIfLowScore(void)
                                     if (moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
                                         targetNotVeryEffectiveFound = 1;
 
-                                    //Set a flag if the attack is a special attack, or fixed damage
-                                    if(gBattleMoves[gCurrentMove].effect == EFFECT_HIDDEN_POWER
-                                        || !(IS_TYPE_PHYSICAL(gBattleMoves[gCurrentMove].type))
-                                        || gBattleMoves[gCurrentMove].effect == EFFECT_LEVEL_DAMAGE
-                                        || gBattleMoves[gCurrentMove].effect != EFFECT_SONICBOOM
-                                        || gBattleMoves[gCurrentMove].effect == EFFECT_SUPER_FANG
+                                    //If the target has a physical attack
+                                    if (IS_TYPE_PHYSICAL(gBattleMoves[gCurrentMove].type)
+                                        && gBattleMoves[gCurrentMove].effect != EFFECT_HIDDEN_POWER
+                                        && gBattleMoves[gCurrentMove].effect != EFFECT_LEVEL_DAMAGE
+                                        && gBattleMoves[gCurrentMove].effect != EFFECT_RAPID_SPIN
+                                        && gBattleMoves[gCurrentMove].effect != EFFECT_SNORE
+                                        && gBattleMoves[gCurrentMove].effect != EFFECT_SONICBOOM
+                                        && gBattleMoves[gCurrentMove].effect != EFFECT_SUPER_FANG
+                                        && gBattleMoves[gCurrentMove].effect != EFFECT_THIEF
+                                        && gBattleMoves[gCurrentMove].effect != EFFECT_TRAP
                                     )
-                                        hasSpecialAttack = 1;
+                                        targetHasPhysicalAttack = 1;
 
                                     //If the opponent has focus punch and the user does not resist it
                                     if(gCurrentMove == MOVE_FOCUS_PUNCH
@@ -1157,7 +1196,7 @@ static bool8 ShouldSwitchIfLowScore(void)
 
         //If the opponent only has physical attacks, or is locked into a physical attack:
         if (monAbility == ABILITY_INTIMIDATE
-            && !(hasSpecialAttack)
+            && targetHasPhysicalAttack
         )
             switchInScore += 3;
 
@@ -1195,7 +1234,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     AI_THINKING_STRUCT->chosenMonId = chosenSwitchIn;
 
     //Final check to see if based on move score, threshold & quality of possible switch-ins, the AI should switch
-    if (maxScore + switchInScore + (Random() % 2) < threshold + 1
+    if (maxScore + (Random() % 2) < threshold + maxSwitchInScore
         && !(BatonPassChosen)
     )
         {
