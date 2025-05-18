@@ -83,7 +83,7 @@ static bool8 ShouldSwitchIfLowScore(void)
             threshold += Random() % 3;
         }
 
-    DebugPrintf("Badly poisoned check applied. Threshold now: %d",(signed char));
+    DebugPrintf("Badly poisoned check applied. Threshold now: %d",(signed char) threshold);
 
     //Check cursed or nightmared
     if (gBattleMons[gActiveBattler].status2 & (STATUS2_CURSED | STATUS2_NIGHTMARE))
@@ -1172,9 +1172,9 @@ static bool8 ShouldSwitchIfLowScore(void)
 
         //Lower the score to bring it in range for use with thresholds. Anything below 23 is a bad score. The starting point is 19 plus the HP factor.
         if (switchInScore <= 23)
-            switchInScore = 0;
+            switchInScore = 1;
         else
-            switchInScore -= 23;
+            switchInScore -= 22;
 
         //Initial score set
         DebugPrintf("switch-in final score = %d.",switchInScore);
@@ -1183,14 +1183,19 @@ static bool8 ShouldSwitchIfLowScore(void)
         if (switchInScore > maxSwitchInScore
             || (switchInScore == maxSwitchInScore && Random() % 2)
         )
-            chosenSwitchIn = i;
+            {
+                chosenSwitchIn = i;
+                maxSwitchInScore = switchInScore;
+            }
     }
+
+    DebugPrintf("Chosen Switch-in: %d",(signed char) chosenSwitchIn);
 
     //Set chosen switch-in. If the AI doesn't decide to switch, but chooses baton pass, then we want it to make use of the same logic.
     AI_THINKING_STRUCT->chosenMonId = chosenSwitchIn;
 
     //Final check to see if based on move score, threshold & quality of possible switch-ins, the AI should switch
-    if (maxScore + switchInScore + (Random() % 2) < threshold
+    if (maxScore + switchInScore + (Random() % 2) < threshold + 1
         && !(BatonPassChosen)
     )
         {
@@ -1446,6 +1451,7 @@ u8 GetMostSuitableMonToSwitchInto(void)
     if (activeMonHP > 0)
         {
             bestMonId = gBattleResources->ai->chosenMonId;
+            DebugPrintf("Chosen Switch-in: %d",(signed char) bestMonId);
         }
     else
         {
