@@ -52,8 +52,8 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 hasHaze, hasPerish, hasPhysicalAttack, hasRapidSpin, hasRoar, hasSleepAtk, targetHasPhysicalAttack, hasWW;
     u8 targetNeutralEffectiveFound, targetNotVeryEffectiveFound, targetSuperEffectiveFound;
     u8 targetCanKoShedinja, targetHasIngrain, targetMoveType, targetMovesChecked, targetStatsRaised;
-    u8 targetLastMove, targetLockedMove, targetPartySize;
-
+    u8 targetAsleep, targetLastMove, targetLockedMove, targetPartySize;
+    u8 neutralEffectiveFound, superEffectiveFound;
     s8 switchInScore = 0;
     s8 maxSwitchInScore = 0;
     s8 maxScore = 0;
@@ -524,6 +524,29 @@ static bool8 ShouldSwitchIfLowScore(void)
     //Set other variables describing the target
     targetLastMove = gLastMoves[gBattlerTarget];
     targetLockedMove = gLockedMoves[gBattlerTarget];
+    targetStatsRaised = 0;
+
+    //If asleep & not waking up this turn, ~80% chance we set targetAsleep and change checks executed further in the code
+    if ((gBattleMons[gBattlerTarget].status1 & STATUS1_SLEEP) > STATUS1_SLEEP_TURN(1)
+        && !(Random() % 5)
+    )
+        {
+            targetAsleep = 1;
+        }
+    else
+        {
+            targetAsleep = 0;
+        }
+
+    //Check if opponent's stat levels are above the minimum
+    for (j = 1; j < NUM_BATTLE_STATS; j++)
+        {
+            if (gBattleMons[gBattlerTarget].statStages[j] > DEFAULT_STAT_STAGE)
+            {
+                    targetStatsRaised = 1;
+                    break;
+            }
+        }
 
     for (i = 0; i < PARTY_SIZE; i++)
     {
@@ -539,6 +562,7 @@ static bool8 ShouldSwitchIfLowScore(void)
 
         //Initialise all pokemon-specific variables (candidate pokemon)
         hasHaze = hasPerish = hasRoar = hasPhysicalAttack = targetHasPhysicalAttack = hasWW = 0;
+        neutralEffectiveFound = superEffectiveFound = 0;
         canKoShedinja = 0;
         statusImmune = 0;
 
@@ -547,7 +571,6 @@ static bool8 ShouldSwitchIfLowScore(void)
         targetCanKoShedinja = 0;
         targetHasIngrain = 0;
         targetMovesChecked = 0;
-        targetStatsRaised = 0;
         targetMoveType = TYPE_NONE;
 
         //Information about the current Pokemon being considered
@@ -589,19 +612,34 @@ static bool8 ShouldSwitchIfLowScore(void)
                 )
                     statusImmune = 1;
 
-                //Check whether the mon has a physical attack which is affected meaningfully by burn
-                if (gBattleMoves[gCurrentMove].power > 0
-                    && IS_TYPE_PHYSICAL(gBattleMoves[gCurrentMove].type)
-                    && gBattleMoves[gCurrentMove].effect != EFFECT_HIDDEN_POWER
-                    && gBattleMoves[gCurrentMove].effect != EFFECT_LEVEL_DAMAGE
-                    && gBattleMoves[gCurrentMove].effect != EFFECT_RAPID_SPIN
-                    && gBattleMoves[gCurrentMove].effect != EFFECT_SNORE
-                    && gBattleMoves[gCurrentMove].effect != EFFECT_SONICBOOM
-                    && gBattleMoves[gCurrentMove].effect != EFFECT_SUPER_FANG
-                    && gBattleMoves[gCurrentMove].effect != EFFECT_THIEF
-                    && gBattleMoves[gCurrentMove].effect != EFFECT_TRAP
-                )
-                    hasPhysicalAttack = 1;
+                //If the move does damage
+                if (gBattleMoves[gCurrentMove].power > 0)
+                    {
+                        //Check whether the mon has a physical attack which is affected meaningfully by burn
+                        if(IS_TYPE_PHYSICAL(gBattleMoves[gCurrentMove].type)
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_HIDDEN_POWER
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_LEVEL_DAMAGE
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_RAPID_SPIN
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_SNORE
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_SONICBOOM
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_SUPER_FANG
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_THIEF
+                            && gBattleMoves[gCurrentMove].effect != EFFECT_TRAP)
+                            hasPhysicalAttack = 1;
+
+                        //Pull the flags
+                        moveFlags = AI_TypeCalc(gCurrentMove, gBattlerTarget, gBattleMons[gBattlerTarget].ability);
+
+                        //Set flags for super effective & neutrally effective attacks
+                        if (moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
+                            superEffectiveFound = 1;
+
+                        if (!(moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
+                            && !(moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
+                            && !(moveFlags & MOVE_RESULT_DOESNT_AFFECT_FOE)
+                        )
+                            neutralEffectiveFound = 1;
+                    }
 
                 if (gBattleMoves[gCurrentMove].effect == EFFECT_RAPID_SPIN)
                     hasRapidSpin = 1;
@@ -933,8 +971,10 @@ static bool8 ShouldSwitchIfLowScore(void)
                 targetMovesChecked = 1;
             }
 
-        //If none of the special cases above apply, then loop through the opponent's moves
-        if (!(targetMovesChecked))
+        //If none of the special cases above apply, and the target is not sleeping, then loop through the opponent's moves
+        if (!(targetMovesChecked)
+            && !(targetAsleep)
+        )
         {
             //Loop through each of the moves
             for (j = 0; j < MAX_MON_MOVES; j++)
@@ -1127,7 +1167,6 @@ static bool8 ShouldSwitchIfLowScore(void)
                     else
                         switchInScore += 12;
                 }
-
             //Otherwise, check type matchup
             else
                 {
@@ -1155,14 +1194,16 @@ static bool8 ShouldSwitchIfLowScore(void)
                         }
                 }
 
-            //Check if opponent's stat levels are above the minimum
-            for (j = 1; j < NUM_BATTLE_STATS; j++)
+            //If the target is asleep, we want to check the moves the candidate has available to it
+            if(targetAsleep)
                 {
-                    if (gBattleMons[gBattlerTarget].statStages[j] > DEFAULT_STAT_STAGE)
-                    {
-                            targetStatsRaised = 1;
-                            break;
-                    }
+                    if(neutralEffectiveFound)
+                        {
+                            switchInScore += 4;
+
+                            if(superEffectiveFound)
+                                switchInScore += 4;
+                        }
                 }
 
             //If the opponent has stat boosts, the AI should try and force them out
@@ -1183,7 +1224,13 @@ static bool8 ShouldSwitchIfLowScore(void)
                             && gBattleMons[gBattlerTarget].ability != ABILITY_SOUNDPROOF
                             && gBattleMons[gBattlerTarget].ability != ABILITY_SUCTION_CUPS)
                     )
-                        switchInScore += 6;
+                        {
+                            switchInScore += 6;
+
+                            //Bonus score if the target is asleep
+                            if(targetAsleep)
+                                switchInScore += 1;
+                        }
                 }
 
             //If the opponent is down to their last mon and we have a pokemon with perish song, score +12
