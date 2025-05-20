@@ -758,6 +758,7 @@
 
 #define FRONTIER_MONS_HIGH_TIER 753 // Mons above this point can only appear > level 50
 
+
 #define FRONTIER_MON_AERODACTYL_5 754
 #define FRONTIER_MON_AERODACTYL_6 755
 #define FRONTIER_MON_AERODACTYL_7 756
