@@ -49,9 +49,10 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 battlerIn1, battlerIn2;
     u8 monAbility, monSpecies, monType1, monType2;
     u8 canKoShedinja, isFaster, statusImmune;
-    u8 hasHaze, hasPerish, hasPhysicalAttack, hasRapidSpin, hasRoar, hasSleepAtk, targetHasPhysicalAttack, hasWW;
+    u8 hasHaze, hasPerish, hasPhysicalAttack, hasRapidSpin, hasRoar, hasSleepAtk, hasWW;
+    u8 targetHasIngrain, targetHasPhysicalAttack, targetHasRapidSpin;
     u8 targetNeutralEffectiveFound, targetNotVeryEffectiveFound, targetSuperEffectiveFound;
-    u8 targetCanKoShedinja, targetHasIngrain, targetMoveType, targetMovesChecked, targetStatsRaised;
+    u8 targetCanKoShedinja, targetMoveType, targetMovesChecked, targetStatsRaised;
     u8 targetAsleep, targetLastMove, targetLockedMove, targetPartySize;
     u8 neutralEffectiveFound, superEffectiveFound;
     s8 switchInScore = 0;
@@ -570,6 +571,7 @@ static bool8 ShouldSwitchIfLowScore(void)
         targetNeutralEffectiveFound = targetNotVeryEffectiveFound = targetSuperEffectiveFound = 0;
         targetCanKoShedinja = 0;
         targetHasIngrain = 0;
+        targetHasRapidSpin = 0;
         targetMovesChecked = 0;
         targetMoveType = TYPE_NONE;
 
@@ -986,6 +988,10 @@ static bool8 ShouldSwitchIfLowScore(void)
                     if (gCurrentMove == MOVE_INGRAIN)
                         targetHasIngrain = 1;
 
+                    //Check for rapid spin
+                    if (gCurrentMove == MOVE_RAPID_SPIN)
+                        targetHasRapidSpin = 1;
+
                     //Pull the flags
                     moveFlags = AI_TypeCalc(gCurrentMove, monSpecies, monAbility);
 
@@ -1250,11 +1256,21 @@ static bool8 ShouldSwitchIfLowScore(void)
         //If the candidate pokemon has rapid spin & spikes are active, score +3
         if (hasRapidSpin
             && gSideStatuses[GetBattlerSide(gActiveBattler)] & SIDE_STATUS_SPIKES
-            && !(gBattleMons[gBattlerTarget].type1 != TYPE_GHOST
-                || gBattleMons[gBattlerTarget].type2 != TYPE_GHOST
+            && !(gBattleMons[gBattlerTarget].type1 == TYPE_GHOST
+                || gBattleMons[gBattlerTarget].type2 == TYPE_GHOST
             )
         )
             switchInScore += 3;
+
+        //If spikes are active on the opponent's side of the field, then 2 in 3 chance that the AI will try to spinblock
+        if (targetHasRapidSpin
+            && gSideStatuses[GetBattlerSide(gBattlerTarget)] & SIDE_STATUS_SPIKES
+            && !(monType1 == TYPE_GHOST
+                || monType2 == TYPE_GHOST
+            )
+            && Random() % 3
+        )
+            switchInScore += 10;
 
         //Lower the score to bring it in range for use with thresholds. Anything below 23 is a bad score. The starting point is 19 plus the HP factor.
         if (switchInScore <= 23)
