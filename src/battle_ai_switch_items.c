@@ -1265,10 +1265,10 @@ static bool8 ShouldSwitchIfLowScore(void)
         //If spikes are active on the opponent's side of the field, then 2 in 3 chance that the AI will try to spinblock
         if (targetHasRapidSpin
             && gSideStatuses[GetBattlerSide(gBattlerTarget)] & SIDE_STATUS_SPIKES
-            && !(monType1 == TYPE_GHOST
+            && Random() % 3
+            && (monType1 == TYPE_GHOST
                 || monType2 == TYPE_GHOST
             )
-            && Random() % 3
         )
             switchInScore += 10;
 
