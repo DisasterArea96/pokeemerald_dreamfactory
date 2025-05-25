@@ -1197,7 +1197,7 @@ static bool8 ShouldSwitchIfLowScore(void)
             //If the target is asleep, we want to check the moves the candidate has available to it
             if(targetAsleep)
                 {
-                    if(neutralEffectiveFound)
+                    if(neutralEffectiveFound || superEffectiveFound)
                         {
                             switchInScore += 4;
 
@@ -1876,9 +1876,7 @@ u8 GetMostSuitableMonToSwitchInto(void)
                         && !(targetStatusImmune)
                         && gBattleMons[gBattlerTarget].type1 != TYPE_FIRE
                         && gBattleMons[gBattlerTarget].type2 != TYPE_FIRE
-                        && gBattleMons[gBattlerTarget].ability != ABILITY_NATURAL_CURE
                         && gBattleMons[gBattlerTarget].ability != ABILITY_WATER_VEIL
-                        && !(gSideStatuses[B_SIDE_PLAYER] & SIDE_STATUS_SAFEGUARD)
                     )
                         switchScore += 3;
 
@@ -1888,9 +1886,7 @@ u8 GetMostSuitableMonToSwitchInto(void)
                             || statusImmune
                             || gSpeciesInfo[monSpecies].types[0] == TYPE_FIRE
                             || gSpeciesInfo[monSpecies].types[1] == TYPE_FIRE
-                            || monAbility == ABILITY_NATURAL_CURE
-                            || monAbility == ABILITY_WATER_VEIL
-                            || gSideStatuses[B_SIDE_OPPONENT] & SIDE_STATUS_SAFEGUARD)
+                            || monAbility == ABILITY_WATER_VEIL)
                     )
                         switchScore += 2;
 
