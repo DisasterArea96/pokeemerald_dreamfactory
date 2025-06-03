@@ -122,10 +122,10 @@ static bool8 ShouldSwitchIfLowScore(void)
     //Check seeded
     if (gStatuses3[gActiveBattler] & STATUS3_LEECHSEED)
         {
-            threshold += 6;
+            threshold += 5;
 
-            if(Random() % 6)
-                threshold += 2;
+            if(!(Random() % 5))
+                threshold += 3;
         }
 
     DebugPrintf("Leech seed check applied. Threshold now: %d",(signed char) threshold);
