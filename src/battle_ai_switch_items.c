@@ -582,7 +582,9 @@ static bool8 ShouldSwitchIfLowScore(void)
         monType2 = gSpeciesInfo[monSpecies].types[1];
 
         //If the candidate Pokemon has trace, then use the target's ability in logic
-        if (monAbility == ABILITY_TRACE)
+        if (monAbility == ABILITY_TRACE
+            && gBattleMons[gBattlerTarget].ability != ABILITY_INTIMIDATE
+        )
             monAbility = gBattleMons[gBattlerTarget].ability;
 
         //Set an initial score based on the HP% divided by 15. This gives a range of 0-6
@@ -1713,7 +1715,9 @@ u8 GetMostSuitableMonToSwitchInto(void)
                     monAbility = GetAbilityBySpecies(monSpecies, GetMonData(&gEnemyParty[i], MON_DATA_ABILITY_NUM));
 
                     //If the candidate Pokemon has trace, then use the target's ability in logic
-                    if (monAbility == ABILITY_TRACE)
+                    if (monAbility == ABILITY_TRACE
+                        && gBattleMons[gBattlerTarget].ability != ABILITY_INTIMIDATE
+                    )
                         monAbility = gBattleMons[gBattlerTarget].ability;
 
                     //Check if safeguard is up, the candidate Pokemon has Natural Cure, or is already statused
