@@ -41,7 +41,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     u16 currentMove2, hp, species;
     u8 *activeBattlerPtr;
     u8 *dynamicMoveType;
-    u8 aiCanFaint, BatonPassChosen, chosenSwitchIn, consideredEffect, damageVar;
+    u8 aiCanFaint, aiCanFaintShouldSwitch, BatonPassChosen, chosenSwitchIn, consideredEffect, damageVar;
     u8 hasPriority, hasWishCombo;
     u8 teamHasRapidSpin;
     u8 targetCanFaint;
@@ -365,6 +365,9 @@ static bool8 ShouldSwitchIfLowScore(void)
                 || hasWishCombo
                 || Random() % 3))
     )
+        aiCanFaintShouldSwitch = 1;
+
+    if (aiCanFaintShouldSwitch)
         {
             //Increase the threshold more when at a higher HP. Also a random factor
             threshold += 4 + ((currentHP - 17) / 14) + Random() % 2;
@@ -1171,6 +1174,10 @@ static bool8 ShouldSwitchIfLowScore(void)
                         }
                 }
 
+            //Debug messages
+            DebugPrintf("Neutral attack found: %d",targetNeutralEffectiveFound);
+            DebugPrintf("Score before type matchup check: %d.",switchInScore);
+
             //If the candidate pokemon is Shedinja and it can't be KO'd by the target, then the AI should want to bring it in
             if (monAbility == ABILITY_WONDER_GUARD)
                 {
@@ -1205,6 +1212,9 @@ static bool8 ShouldSwitchIfLowScore(void)
                                 }
                         }
                 }
+
+            //Debug message
+            DebugPrintf("Score after type matchup check: %d.",switchInScore);
 
             //If the target is asleep, we want to check the moves the candidate has available to it
             if(targetAsleep)
@@ -1309,6 +1319,8 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     //Final check to see if based on move score, threshold & quality of possible switch-ins, the AI should switch
     if (maxScore + (Random() % 2) < threshold + maxSwitchInScore
+        && ((maxScore <= 101 && !(aiCanFaintShouldSwitch)) || Random() % 11 == 0)
+        && ((maxScore <= 100 && !(aiCanFaintShouldSwitch)) || Random() % 3 != 0)
         && !(BatonPassChosen)
     )
         {
