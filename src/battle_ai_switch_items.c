@@ -1319,8 +1319,8 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     //Final check to see if based on move score, threshold & quality of possible switch-ins, the AI should switch
     if (maxScore + (Random() % 2) < threshold + maxSwitchInScore
-        && ((maxScore <= 101 && !(aiCanFaintShouldSwitch)) || Random() % 11 == 0)
-        && ((maxScore <= 100 && !(aiCanFaintShouldSwitch)) || Random() % 3 != 0)
+        && (aiCanFaintShouldSwitch || maxScore <= 101 || Random() % 11 == 0)
+        && (aiCanFaintShouldSwitch || maxScore <= 100 || Random() % 3 != 0)
         && !(BatonPassChosen)
     )
         {
