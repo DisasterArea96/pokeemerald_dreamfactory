@@ -581,6 +581,10 @@ static bool8 ShouldSwitchIfLowScore(void)
         monType1 = gSpeciesInfo[monSpecies].types[0];
         monType2 = gSpeciesInfo[monSpecies].types[1];
 
+        //If the candidate Pokemon has trace, then use the target's ability in logic
+        if (monAbility == ABILITY_TRACE)
+            monAbility = gBattleMons[gBattlerTarget].ability;
+
         //Set an initial score based on the HP% divided by 15. This gives a range of 0-6
         switchInScore = (GetMonData(&gEnemyParty[i], MON_DATA_HP) * 100)
                         / (GetMonData(&gEnemyParty[i], MON_DATA_MAX_HP) * 15);
@@ -1250,6 +1254,9 @@ static bool8 ShouldSwitchIfLowScore(void)
         //If the opponent only has physical attacks, or is locked into a physical attack:
         if (monAbility == ABILITY_INTIMIDATE
             && targetHasPhysicalAttack
+            && gBattleMons[gBattlerTarget].ability != ABILITY_CLEAR_BODY
+            && gBattleMons[gBattlerTarget].ability != ABILITY_WHITE_SMOKE
+            && gBattleMons[gBattlerTarget].ability != ABILITY_HYPER_CUTTER
         )
             switchInScore += 3;
 
@@ -1279,7 +1286,7 @@ static bool8 ShouldSwitchIfLowScore(void)
             switchInScore -= 22;
 
         //Initial score set
-        DebugPrintf("switch-in final score = %d.",switchInScore);
+        DebugPrintf("switch-in final score = %d for pokemon %d",(signed char) switchInScore,i);
 
         //If this pokemon has a higher switch-in score, then set it to the chosen switch-in. Note that this is not perfectly random for teams of more than 3 pokemon.
         if (switchInScore > maxSwitchInScore
@@ -1296,11 +1303,15 @@ static bool8 ShouldSwitchIfLowScore(void)
     //Set chosen switch-in. If the AI doesn't decide to switch, but chooses baton pass, then we want it to make use of the same logic.
     AI_THINKING_STRUCT->chosenMonId = chosenSwitchIn;
 
+    DebugPrintf("Max Score: %d, Threshold: %d, Max Switch-In Score: %d",(signed char) maxScore, (signed char) threshold, (signed char) maxSwitchInScore);
+
     //Final check to see if based on move score, threshold & quality of possible switch-ins, the AI should switch
     if (maxScore + (Random() % 2) < threshold + maxSwitchInScore
         && !(BatonPassChosen)
     )
         {
+            DebugPrintf("Switching to %d",chosenSwitchIn);
+
             *(gBattleStruct->AI_monToSwitchIntoId + gActiveBattler) = PARTY_SIZE;
             BtlController_EmitTwoReturnValues(BUFFER_B, B_ACTION_SWITCH, 0);
             return TRUE;
@@ -1701,6 +1712,10 @@ u8 GetMostSuitableMonToSwitchInto(void)
                     monSpecies = GetMonData(&gEnemyParty[i], MON_DATA_SPECIES);
                     monAbility = GetAbilityBySpecies(monSpecies, GetMonData(&gEnemyParty[i], MON_DATA_ABILITY_NUM));
 
+                    //If the candidate Pokemon has trace, then use the target's ability in logic
+                    if (monAbility == ABILITY_TRACE)
+                        monAbility = gBattleMons[gBattlerTarget].ability;
+
                     //Check if safeguard is up, the candidate Pokemon has Natural Cure, or is already statused
                     if (gSideStatuses[B_SIDE_OPPONENT] & SIDE_STATUS_SAFEGUARD
                         || monAbility == ABILITY_NATURAL_CURE
@@ -1908,6 +1923,9 @@ u8 GetMostSuitableMonToSwitchInto(void)
 
                     if (monAbility == ABILITY_INTIMIDATE
                         && targetHasPhysicalAttack
+                        && gBattleMons[gBattlerTarget].ability != ABILITY_CLEAR_BODY
+                        && gBattleMons[gBattlerTarget].ability != ABILITY_WHITE_SMOKE
+                        && gBattleMons[gBattlerTarget].ability != ABILITY_HYPER_CUTTER
                     )
                         switchScore += 3;
 
