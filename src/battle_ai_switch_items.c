@@ -93,7 +93,9 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 lastUsedEffect = gBattleMoves[gLastMoves[gActiveBattler]].effect;
 
     //Initialising variables
-    aiCanFaint = BatonPassChosen = hasPriority = hasWishCombo = isFaster = targetPartySize = targetCanFaint = teamHasRapidSpin = 0;
+    aiCanFaint = aiCanFaintShouldSwitch = 0;
+    hasPriority= hasWishCombo = 0;
+    BatonPassChosen = isFaster = targetPartySize = targetCanFaint = teamHasRapidSpin = 0;
 
     DebugPrintf("Checking ShouldSwitchIfLowScore.");
 
