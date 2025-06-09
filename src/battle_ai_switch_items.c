@@ -87,8 +87,9 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 healingEffects[] = {EFFECT_MOONLIGHT, EFFECT_MORNING_SUN, EFFECT_SYNTHESIS, EFFECT_WISH, EFFECT_REST, EFFECT_SOFTBOILED, EFFECT_RESTORE_HP};
 
     //Fixed, frequently referenced variables
+    u16 maxHP = gBattleMons[gActiveBattler].maxHP;
+    u16 currentHP = gBattleMons[gActiveBattler].hp;
     u8 aiFirstTurn = gDisableStructs[gActiveBattler].isFirstTurn;
-    u8 currentHP = gBattleMons[gActiveBattler].hp;
     u8 item = gBattleMons[gActiveBattler].item;
     u8 lastUsedEffect = gBattleMoves[gLastMoves[gActiveBattler]].effect;
 
@@ -372,7 +373,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     if (aiCanFaintShouldSwitch)
         {
             //Increase the threshold more when at a higher HP. Also a random factor
-            threshold += 4 + ((currentHP - 17) / 14) + Random() % 2;
+            threshold += 4 + ((((currentHP * 100) / maxHP) - 17) / 14) + Random() % 2;
 
             DebugPrintf("AI can faint. Threshold now: %d",(signed char) threshold);
 
@@ -487,7 +488,7 @@ static bool8 ShouldSwitchIfLowScore(void)
         }
 
     //Final Threshold is set
-    DebugPrintf("Threshold set for %d is %d.",gBattleMons[gActiveBattler].species,(signed char) threshold);
+    DebugPrintf("Threshold set for %S is %d.",gSpeciesNames[gBattleMons[gActiveBattler].species],(signed char) threshold);
 
     // Find the score of the move being used by the AI
     for (i = 0; i < MAX_MON_MOVES; i++)
@@ -508,7 +509,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     }
 
     //Final Max Score is set
-    DebugPrintf("Max score found for %d is %d.",gBattleMons[gActiveBattler].species,maxScore);
+    DebugPrintf("Max score found for %S is %d.",gSpeciesNames[gBattleMons[gActiveBattler].species],maxScore);
 
     //Set targetPartySize variable
     for (i = 0; i < PARTY_SIZE; i++)
