@@ -1396,7 +1396,7 @@ static bool8 ShouldSwitch(void)
     s32 i;
     s32 availableToSwitch;
 
-    DebugPrintf("Checking if %d should switch.",gBattleMons[gActiveBattler].species);
+    DebugPrintf("Checking if %S should switch.",gSpeciesNames[gBattleMons[gActiveBattler].species]);
 
     if (gBattleMons[*(activeBattlerPtr = &gActiveBattler)].status2 & (STATUS2_WRAPPED | STATUS2_ESCAPE_PREVENTION))
         return FALSE;
@@ -1477,7 +1477,7 @@ void AI_TrySwitchOrUseItem(void)
     s32 lastId; // + 1
     u8 battlerIdentity = GetBattlerPosition(gActiveBattler);
 
-    DebugPrintf("Runnung AI_TrySwitchOrUseItem.");
+    DebugPrintf("Running AI_TrySwitchOrUseItem.");
 
     if (GetBattlerSide(gActiveBattler) == B_SIDE_PLAYER)
         party = gPlayerParty;
