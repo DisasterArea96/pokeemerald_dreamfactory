@@ -38,10 +38,11 @@ static bool8 ShouldSwitchIfLowScore(void)
     s32 i, j, k;
     s32 firstId, lastId;
     s8 currentScore;
-    u16 currentMove2, hp, species;
+    u16 currentMove2, species;
+    u16 hp, damageVar;
     u8 *activeBattlerPtr;
     u8 *dynamicMoveType;
-    u8 aiCanFaint, aiCanFaintShouldSwitch, BatonPassChosen, chosenSwitchIn, consideredEffect, damageVar;
+    u8 aiCanFaint, aiCanFaintShouldSwitch, BatonPassChosen, chosenSwitchIn, consideredEffect;
     u8 hasPriority, hasWishCombo;
     u8 teamHasRapidSpin;
     u8 targetCanFaint;
@@ -273,6 +274,9 @@ static bool8 ShouldSwitchIfLowScore(void)
     // Apply a higher likely damage roll
     damageVar = damageVar * 95 / 100;
 
+    //Remove the effect of critical hits doubling the damage
+    damageVar /= gCritMultiplier;
+
     if (currentHP <= damageVar)
         aiCanFaint = TRUE;
 
@@ -327,8 +331,11 @@ static bool8 ShouldSwitchIfLowScore(void)
                 }
         }
 
-    // Apply a higher likely damage roll
+    //Apply a higher likely damage roll
     damageVar = damageVar * 95 / 100;
+
+    //Remove the effect of critical hits doubling the damage
+    damageVar /= gCritMultiplier;
 
     if (gBattleMons[gBattlerTarget].hp <= damageVar)
         targetCanFaint = TRUE;
