@@ -91,7 +91,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     u16 maxHP = gBattleMons[gActiveBattler].maxHP;
     u16 currentHP = gBattleMons[gActiveBattler].hp;
     u8 aiFirstTurn = gDisableStructs[gActiveBattler].isFirstTurn;
-    u8 item = gBattleMons[gActiveBattler].item;
+    u16 item = gBattleMons[gActiveBattler].item;
     u8 lastUsedEffect = gBattleMoves[gLastMoves[gActiveBattler]].effect;
 
     //Initialising variables
@@ -575,12 +575,13 @@ static bool8 ShouldSwitchIfLowScore(void)
             continue;
 
         //Initialise all pokemon-specific variables (candidate pokemon)
-        hasHaze = hasPerish = hasRoar = hasPhysicalAttack = targetHasPhysicalAttack = hasWW = 0;
+        hasHaze = hasPerish = hasRapidSpin = hasRoar = hasPhysicalAttack = hasSleepAtk = hasWW = 0;
         neutralEffectiveFound = superEffectiveFound = 0;
         canKoShedinja = 0;
         statusImmune = 0;
 
         //Initialise all pokemon-specific variables (target)
+        targetHasPhysicalAttack = 0;
         targetNeutralEffectiveFound = targetNotVeryEffectiveFound = targetSuperEffectiveFound = 0;
         targetCanKoShedinja = 0;
         targetHasIngrain = 0;
@@ -614,7 +615,7 @@ static bool8 ShouldSwitchIfLowScore(void)
         if (GetMonData(&gEnemyParty[i], MON_DATA_SPEED) > gBattleMons[gBattlerTarget].speed)
             switchInScore += 1;
 
-        DebugPrintf("Tested whether AI is faster than opponent.Switch-in score now: %d",(signed char) switchInScore);
+        DebugPrintf("Tested whether AI is faster than opponent. Switch-in score now: %d",(signed char) switchInScore);
 
         //Check if safeguard is up, the candidate Pokemon has Natural Cure, or is already statused
         if (gSideStatuses[B_SIDE_OPPONENT] & SIDE_STATUS_SAFEGUARD
