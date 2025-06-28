@@ -603,7 +603,6 @@ AI_CBM_Roar:
 AI_CBM_FakeOut:
 	is_first_turn_for AI_USER
 	if_equal FALSE, Score_Minus10
-	score +2
 	end
 
 AI_CBM_Stockpile:
@@ -926,6 +925,7 @@ AI_CV_CheckMovesAndEffects:
 	if_effect EFFECT_SMELLINGSALT, AI_CV_SmellingSalt
 	if_effect EFFECT_SPIT_UP, AI_CV_SpitUp
 	if_effect EFFECT_PERISH_SONG, AI_CV_SuicideCheck
+	if_effect EFFECT_FAKE_OUT, AI_CV_FakeOut
 	if_effect EFFECT_SUPERPOWER, AI_CV_Superpower
 	end
 
@@ -2884,6 +2884,13 @@ AI_CV_SmellingSalt:
 
 AI_CV_SmellingSalt_Plus1:
 	score +1
+	end
+
+AI_CV_FakeOut:
+	if_ability AI_TARGET, ABILITY_INNER_FOCUS, AI_CV_FakeOut_End
+	if_ability AI_TARGET, ABILITY_SHIELD_DUST, AI_CV_FakeOut_End
+	score +2
+AI_CV_FakeOut_End:
 	end
 
 AI_CV_Superpower:
