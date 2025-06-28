@@ -274,15 +274,13 @@ static bool8 ShouldSwitchIfLowScore(void)
     // Apply a higher likely damage roll
     damageVar = damageVar * 95 / 100;
 
-    //Remove the effect of critical hits doubling the damage
-    damageVar /= gCritMultiplier;
-
     if (currentHP <= damageVar)
         aiCanFaint = TRUE;
 
     DebugPrintf("aiCanFaint: %d",aiCanFaint);
 
     // Check if target can faint
+    // We probably don't need to reset ALL of these variables, but it can't hurt.
     damageVar = 0;
     gDynamicBasePower = 0;
     dynamicMoveType = &gBattleStruct->dynamicMoveType;
@@ -333,9 +331,6 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     //Apply a higher likely damage roll
     damageVar = damageVar * 95 / 100;
-
-    //Remove the effect of critical hits doubling the damage
-    damageVar /= gCritMultiplier;
 
     if (gBattleMons[gBattlerTarget].hp <= damageVar)
         targetCanFaint = TRUE;
