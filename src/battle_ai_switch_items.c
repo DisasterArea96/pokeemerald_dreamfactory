@@ -279,6 +279,12 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     DebugPrintf("aiCanFaint: %d",aiCanFaint);
 
+    //We also set aiCan Faint if the attack does at least 85% of its max HP on a typical roll, to avoid the AI taking huge damage for no reason early on
+    if (damageVar * 20 >= maxHP * 17)
+        aiCanFaint = TRUE;
+
+    DebugPrintf("aiCanFaint: %d",aiCanFaint);
+
     // Check if target can faint
     // We probably don't need to reset ALL of these variables, but it can't hurt.
     damageVar = 0;
