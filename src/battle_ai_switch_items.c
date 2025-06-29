@@ -51,7 +51,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 monAbility, monSpecies, monType1, monType2;
     u8 canKoShedinja, isFaster, statusImmune;
     u8 hasHaze, hasPerish, hasPhysicalAttack, hasRapidSpin, hasRoar, hasSleepAtk, hasWW;
-    u8 targetHasIngrain, targetHasPhysicalAttack, targetHasRapidSpin;
+    u8 targetHasIngrain, targetHasPhysicalAttack, targetHasPriority, targetHasRapidSpin;
     u8 targetNeutralEffectiveFound, targetNotVeryEffectiveFound, targetSuperEffectiveFound;
     u8 targetCanKoShedinja, targetMoveType, targetMovesChecked, targetStatsRaised;
     u8 targetAsleep, targetLastMove, targetLockedMove, targetPartySize;
@@ -98,6 +98,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     aiCanFaint = aiCanFaintShouldSwitch = 0;
     hasPriority = hasSubPinch = hasWishCombo = 0;
     BatonPassChosen = isFaster = targetPartySize = targetCanFaint = teamHasRapidSpin = 0;
+    targetHasPriority = 0;
 
     DebugPrintf("Checking ShouldSwitchIfLowScore.");
 
