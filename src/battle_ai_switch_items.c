@@ -45,6 +45,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 aiCanFaint, aiCanFaintShouldSwitch, BatonPassChosen, chosenSwitchIn, consideredEffect;
     u8 hasPriority, hasSubPinch, hasRecovery;
     u8 teamHasRapidSpin;
+    u8 maxPower;
     u8 targetCanFaint;
     u8 moveFlags;
     u8 battlerIn1, battlerIn2;
@@ -99,6 +100,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     hasPriority = hasSubPinch = hasRecovery = 0;
     BatonPassChosen = isFaster = targetPartySize = targetCanFaint = teamHasRapidSpin = 0;
     targetHasPriority = 0;
+    maxPower = 0;
 
     DebugPrintf("Checking ShouldSwitchIfLowScore.");
 
@@ -240,6 +242,10 @@ static bool8 ShouldSwitchIfLowScore(void)
 
                     moveFlags = AI_TypeCalc(gCurrentMove, gActiveBattler, ABILITY_WONDER_GUARD);
 
+                    //If the move does damage
+                    if (gBattleMoves[gCurrentMove].power > maxPower)
+                        maxPower = gBattleMoves[gCurrentMove].power;
+
                     // If the opponent has an attacking move that can KO shedinja
                     if (gBattleMoves[gBattleMons[gBattlerTarget].moves[i]].power > 0
                         && moveFlags & MOVE_RESULT_SUPER_EFFECTIVE
@@ -259,6 +265,10 @@ static bool8 ShouldSwitchIfLowScore(void)
             for (i = 0; i < MAX_MON_MOVES; i++)
                 {
                     gCurrentMove = gBattleMons[gBattlerTarget].moves[i];
+
+                    //If the move does damage
+                    if (gBattleMoves[gCurrentMove].power > maxPower)
+                        maxPower = gBattleMoves[gCurrentMove].power;
 
                     if (gCurrentMove != MOVE_NONE)
                         {
@@ -287,8 +297,10 @@ static bool8 ShouldSwitchIfLowScore(void)
     DebugPrintf("aiCanFaint: %d",aiCanFaint);
 
     //If the target cannot damage the active pokemon, massively decrease the threshold
-    if (damageVar == 0)
+    if (damageVar == 0 && maxPower > 0)
         threshold -= 17;
+
+    DebugPrintf("current threshold: %d",threshold);
 
     // Check if target can faint
     // We probably don't need to reset ALL of these variables, but it can't hurt.
