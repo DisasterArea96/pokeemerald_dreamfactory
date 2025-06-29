@@ -379,18 +379,16 @@ static bool8 ShouldSwitchIfLowScore(void)
             )
                 hasPriority = TRUE;
 
-            if (lastUsedEffect == EFFECT_WISH
-                && (consideredEffect == EFFECT_SEMI_INVULNERABLE
-                    || consideredEffect == EFFECT_PROTECT)
-            )
-                hasRecovery = TRUE;
-
+            //Checking for healing effects - Wish has to already be active though
             if (consideredEffect == EFFECT_MORNING_SUN
                 || consideredEffect == EFFECT_MOONLIGHT
                 || consideredEffect == EFFECT_REST
                 || consideredEffect == EFFECT_RESTORE_HP
                 || consideredEffect == EFFECT_SOFTBOILED
                 || consideredEffect == EFFECT_SYNTHESIS
+                || (lastUsedEffect == EFFECT_WISH
+                    &&  (consideredEffect == EFFECT_SEMI_INVULNERABLE
+                        || consideredEffect == EFFECT_PROTECT))
             )
                 hasRecovery = TRUE;
 
@@ -426,7 +424,7 @@ static bool8 ShouldSwitchIfLowScore(void)
         && !(gBattleMons[gActiveBattler].status2 & STATUS2_SUBSTITUTE)
         && !(isFaster
             && (targetCanFaint
-                || hasRecovery
+                || (hasRecovery && currentHP * 5 < maxHP * 3)
                 || (hasSubPinch && !(targetHasPriority))
                 || Random() % 3)
              )

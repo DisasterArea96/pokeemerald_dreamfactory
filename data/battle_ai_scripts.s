@@ -1740,8 +1740,15 @@ AI_CV_Encore_Plus3:
 	end
 
 AI_CV_LockOn:
+	if_status2 AI_USER, STATUS2_SUBSTITUTE, AI_CV_LockOn_RandomMinus1
+	if_ai_can_faint AI_CV_LockOn_Minus10
+AI_CV_LockOn_RandomMinus1:
 	if_random_less_than 128, AI_End
 	score -1
+	end
+
+AI_CV_LockOn_Minus10:
+	score -10
 	end
 
 AI_CV_Foresight:
