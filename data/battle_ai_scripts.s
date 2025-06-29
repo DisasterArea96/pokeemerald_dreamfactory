@@ -1106,6 +1106,17 @@ AI_CV_SpDefUp:
 	if_has_move AI_TARGET, MOVE_HIDDEN_POWER, AI_CV_DefensesUp_Plus1
 	goto AI_CV_Stats
 
+AI_CV_Speed:
+	if_target_faster AI_CV_Speed2
+	if_random_less_than 32, AI_CV_Stats
+	score -2
+	goto AI_CV_Stats
+
+AI_CV_Speed2:
+	if_random_less_than 70, AI_CV_Stats
+	score +3
+	goto AI_CV_Stats
+
 AI_CV_DefensesUp_Plus1:
 	if_random_less_than 48, AI_CV_Stats
 	score +1
@@ -1201,17 +1212,6 @@ AI_CV_BellyDrum_Minus10:
 AI_CV_SpeedDownFromChance:
 	get_considered_move_second_eff_chance
 	if_more_than 20, AI_CV_Speed
-	end
-
-AI_CV_Speed:
-	if_target_faster AI_CV_Speed2
-	if_random_less_than 32, AI_End
-	score -2
-	end
-
-AI_CV_Speed2:
-	if_random_less_than 70, AI_End
-	score +3
 	end
 
 AI_CV_PsychUp:
