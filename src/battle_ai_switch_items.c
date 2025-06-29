@@ -43,7 +43,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 *activeBattlerPtr;
     u8 *dynamicMoveType;
     u8 aiCanFaint, aiCanFaintShouldSwitch, BatonPassChosen, chosenSwitchIn, consideredEffect;
-    u8 hasPriority, hasWishCombo;
+    u8 hasPriority, hasSubPinch, hasWishCombo;
     u8 teamHasRapidSpin;
     u8 targetCanFaint;
     u8 moveFlags;
@@ -96,7 +96,7 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     //Initialising variables
     aiCanFaint = aiCanFaintShouldSwitch = 0;
-    hasPriority= hasWishCombo = 0;
+    hasPriority = hasSubPinch = hasWishCombo = 0;
     BatonPassChosen = isFaster = targetPartySize = targetCanFaint = teamHasRapidSpin = 0;
 
     DebugPrintf("Checking ShouldSwitchIfLowScore.");
@@ -341,9 +341,12 @@ static bool8 ShouldSwitchIfLowScore(void)
     if (GetWhoStrikesFirst(gBattlerTarget, gActiveBattler, TRUE))
         isFaster = TRUE;
 
-    //check for certain moves
+    //check for certain moves on the active pokemon's moveset'
     for (i = 0; i < MAX_MON_MOVES; i++)
         {
+            //Set variables
+            consideredEffect = gBattleMoves[gBattleMons[gActiveBattler].moves[i]].effect;
+
             if (consideredEffect == EFFECT_QUICK_ATTACK
                 || consideredEffect == EFFECT_ENDURE
                 || (consideredEffect == EFFECT_PROTECT
@@ -354,11 +357,35 @@ static bool8 ShouldSwitchIfLowScore(void)
                 hasPriority = TRUE;
 
             if (lastUsedEffect == EFFECT_WISH
-                || consideredEffect == EFFECT_SEMI_INVULNERABLE)
+                && (consideredEffect == EFFECT_SEMI_INVULNERABLE
+                    || consideredEffect == EFFECT_PROTECT)
+                )
                 hasWishCombo = TRUE;
+
+            if (consideredEffect == EFFECT_SUBSTITUTE
+                && (item == ITEM_LIECHI_BERRY
+                    || item == ITEM_PETAYA_BERRY
+                    || item == ITEM_STARF_BERRY)
+            )
+                hasSubPinch = TRUE;
         }
 
-    DebugPrintf("isFaster: %d, hasPriority: %d",isFaster,hasPriority);
+    DebugPrintf("isFaster: %d",isFaster);
+    DebugPrintf("hasPriority: %d",hasPriority);
+    DebugPrintf("hasWishCombo: %d",hasWishCombo);
+    DebugPrintf("hasSubPinch: %d",hasSubPinch);
+
+    //Check for priority attacks on the opponent's side
+    for (i = 0; i < MAX_MON_MOVES; i++)
+        {
+            if (gBattleMoves[gBattleMons[gBattlerTarget].moves[i]].effect == EFFECT_QUICK_ATTACK)
+                {
+                    targetHasPriority = TRUE;
+                    break;
+                }
+        }
+
+    DebugPrintf("hasSubPinch: %d",targetHasPriority);
 
     //If the AI can faint, with other checks to ensure switching isn't a terrible idea
     if(aiCanFaint
@@ -368,9 +395,13 @@ static bool8 ShouldSwitchIfLowScore(void)
         && !(isFaster
             && (targetCanFaint
                 || hasWishCombo
-                || Random() % 3))
+                || (hasSubPinch && !(targetHasPriority))
+                || Random() % 3)
+             )
     )
         aiCanFaintShouldSwitch = 1;
+
+    DebugPrintf("aiCanFaintShouldSwitch: %d",aiCanFaintShouldSwitch);
 
     if (aiCanFaintShouldSwitch)
         {
