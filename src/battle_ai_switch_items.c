@@ -43,7 +43,7 @@ static bool8 ShouldSwitchIfLowScore(void)
     u8 *activeBattlerPtr;
     u8 *dynamicMoveType;
     u8 aiCanFaint, aiCanFaintShouldSwitch, BatonPassChosen, chosenSwitchIn, consideredEffect;
-    u8 hasPriority, hasSubPinch, hasWishCombo;
+    u8 hasPriority, hasSubPinch, hasRecovery;
     u8 teamHasRapidSpin;
     u8 targetCanFaint;
     u8 moveFlags;
@@ -96,7 +96,7 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     //Initialising variables
     aiCanFaint = aiCanFaintShouldSwitch = 0;
-    hasPriority = hasSubPinch = hasWishCombo = 0;
+    hasPriority = hasSubPinch = hasRecovery = 0;
     BatonPassChosen = isFaster = targetPartySize = targetCanFaint = teamHasRapidSpin = 0;
     targetHasPriority = 0;
 
@@ -286,6 +286,10 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     DebugPrintf("aiCanFaint: %d",aiCanFaint);
 
+    //If the target cannot damage the active pokemon, massively decrease the threshold
+    if (damageVar == 0)
+        threshold -= 17;
+
     // Check if target can faint
     // We probably don't need to reset ALL of these variables, but it can't hurt.
     damageVar = 0;
@@ -366,8 +370,17 @@ static bool8 ShouldSwitchIfLowScore(void)
             if (lastUsedEffect == EFFECT_WISH
                 && (consideredEffect == EFFECT_SEMI_INVULNERABLE
                     || consideredEffect == EFFECT_PROTECT)
-                )
-                hasWishCombo = TRUE;
+            )
+                hasRecovery = TRUE;
+
+            if (consideredEffect == EFFECT_MORNING_SUN
+                || consideredEffect == EFFECT_MOONLIGHT
+                || consideredEffect == EFFECT_REST
+                || consideredEffect == EFFECT_RESTORE_HP
+                || consideredEffect == EFFECT_SOFTBOILED
+                || consideredEffect == EFFECT_SYNTHESIS
+            )
+                hasRecovery = TRUE;
 
             if (consideredEffect == EFFECT_SUBSTITUTE
                 && (item == ITEM_LIECHI_BERRY
@@ -379,7 +392,7 @@ static bool8 ShouldSwitchIfLowScore(void)
 
     DebugPrintf("isFaster: %d",isFaster);
     DebugPrintf("hasPriority: %d",hasPriority);
-    DebugPrintf("hasWishCombo: %d",hasWishCombo);
+    DebugPrintf("hasRecovery: %d",hasRecovery);
     DebugPrintf("hasSubPinch: %d",hasSubPinch);
 
     //Check for priority attacks on the opponent's side
@@ -401,7 +414,7 @@ static bool8 ShouldSwitchIfLowScore(void)
         && !(gBattleMons[gActiveBattler].status2 & STATUS2_SUBSTITUTE)
         && !(isFaster
             && (targetCanFaint
-                || hasWishCombo
+                || hasRecovery
                 || (hasSubPinch && !(targetHasPriority))
                 || Random() % 3)
              )
