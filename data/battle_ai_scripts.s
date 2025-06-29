@@ -358,6 +358,7 @@ AI_CBM_CheckEffect:
 	if_effect EFFECT_MUD_SPORT, AI_CBM_MudSport
 	if_effect EFFECT_WATER_SPORT, AI_CBM_WaterSport
 	if_effect EFFECT_CAMOUFLAGE, AI_CBM_Camouflage
+	if_effect EFFECT_TRICK, AI_CBM_Trick
 	end
 
 AI_CBM_Sleep:
@@ -645,6 +646,19 @@ AI_CBM_Camouflage:
 	if_equal TYPE_NORMAL, Score_Minus10
 	get_user_type2
 	if_equal TYPE_NORMAL, Score_Minus10
+	end
+
+AI_CBM_Trick:
+	if_status2 AI_TARGET, STATUS2_SUBSTITUTE, Score_Minus10
+	if_has_move_with_effect AI_TARGET, EFFECT_SUBSTITUTE, AI_CBM_Trick_CheckSubstitute
+	end
+
+AI_CBM_Trick_CheckSubstitute:
+	if_target_faster AI_CBM_Trick_RandomMinus10
+	end
+
+AI_CBM_Trick_RandomMinus10:
+	if_random_less_than 192, Score_Minus10
 	end
 
 AI_CBM_Rest:

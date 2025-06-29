@@ -197,7 +197,7 @@ static bool8 ShouldSwitchIfLowScore(void)
         {
             if (gBattleMoves[gBattleMons[gBattlerTarget].moves[i]].effect == EFFECT_SUBSTITUTE)
                 {
-                    threshold += -3 - Random() % 3;
+                    threshold += -1 - Random() % 2;
                     break;
                 }
         }
@@ -1100,10 +1100,7 @@ static bool8 ShouldSwitchIfLowScore(void)
                                         if (moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
                                             targetSuperEffectiveFound = 1;
 
-                                        if (!(moveFlags & MOVE_RESULT_SUPER_EFFECTIVE)
-                                            && !(moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
-                                            && !(moveFlags & MOVE_RESULT_DOESNT_AFFECT_FOE)
-                                        )
+                                        if (!(moveFlags))
                                             targetNeutralEffectiveFound = 1;
 
                                         if (moveFlags & MOVE_RESULT_NOT_VERY_EFFECTIVE)
