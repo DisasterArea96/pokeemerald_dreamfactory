@@ -18,21 +18,6 @@
 // this file's functions
 static bool8 ShouldUseItem(void);
 
-static bool8 ShouldSwitchIfPerishSong(void)
-{
-    if (gStatuses3[gActiveBattler] & STATUS3_PERISH_SONG
-        && gDisableStructs[gActiveBattler].perishSongTimer == 0)
-    {
-        *(gBattleStruct->AI_monToSwitchIntoId + gActiveBattler) = PARTY_SIZE;
-        BtlController_EmitTwoReturnValues(BUFFER_B, B_ACTION_SWITCH, 0);
-        return TRUE;
-    }
-    else
-    {
-        return FALSE;
-    }
-}
-
 static bool8 ShouldSwitchIfLowScore(void)
 {
     s32 i, j, k;
@@ -537,16 +522,30 @@ static bool8 ShouldSwitchIfLowScore(void)
                         {
                             if (gBattleMoves[gBattleMons[gBattlerTarget].moves[i]].effect == EFFECT_SPIKES)
                                 {
-                                    threshold = -70;
+                                    threshold -= 20;
                                     break;
                                 }
                         }
 
                     //check if spikes are up
                     if (gSideStatuses[B_SIDE_OPPONENT] & SIDE_STATUS_SPIKES)
-                        threshold = -70;
+                        threshold -= 70;
 
                     DebugPrintf("Spikes checks applied. Threshold now: %d",(signed char) threshold);
+                }
+        }
+
+    //Check perish count
+    if (gStatuses3[gActiveBattler] & STATUS3_PERISH_SONG)
+        {
+            if(gDisableStructs[gActiveBattler].perishSongTimer == 0)
+                {
+                    threshold += 40;
+                }
+            else
+                {
+                   if(!(Random() % 3))
+                       threshold += 10;
                 }
         }
 
