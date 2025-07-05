@@ -1521,8 +1521,6 @@ static bool8 ShouldSwitch(void)
 
     if (availableToSwitch == 0)
         return FALSE;
-    if (ShouldSwitchIfPerishSong())
-        return TRUE;
     if (ShouldSwitchIfLowScore())
         return TRUE;
 
