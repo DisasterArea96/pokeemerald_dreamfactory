@@ -72,15 +72,22 @@ AI_CBM_Imitate:
 	if_equal TRUE, Score_Minus10
 	consider_imitated_move
 AI_CBM_VS_Substitute_PreCheck:
-	if_has_move_with_effect AI_TARGET, EFFECT_SUBSTITUTE, AI_CBM_VS_Substitute
+	if_status2 AI_TARGET, STATUS2_SUBSTITUTE, AI_CBM_VS_Substitute
+	if_has_move_with_effect AI_TARGET, EFFECT_SUBSTITUTE, AI_CBM_VS_Substitute_HPCheck
+	goto AI_CBM_CheckImmunities_PreCheck
+
+AI_CBM_VS_Substitute_HPCheck:
+	if_can_use_substitute AI_TARGET, AI_CBM_VS_Substitute
 	goto AI_CBM_CheckImmunities_PreCheck
 
 AI_CBM_VS_Substitute:
+	if_effect EFFECT_DREAM_EATER, AI_CBM_SubstituteBlocks_SpeedCheck
+	if_effect EFFECT_CURSE, AI_CBM_VS_Substitute_CurseTypeCheck
+	if_effect EFFECT_ROAR, AI_CBM_CheckSoundproof
+	get_considered_move_effect
+	if_in_bytes AI_CBM_IgnoresSubstitute_EffList, AI_CBM_CheckEffect
 	get_considered_move_power
 	if_equal 0, AI_CBM_VS_Substitute_CheckTarget
-	if_effect EFFECT_CURSE, AI_CBM_VS_Substitute_CurseTypeCheck
-	get_considered_move_effect
-	if_in_bytes AI_CBM_SubstituteBlocks_EffList, AI_CBM_SubstituteBlocks_SpeedCheck
 	goto AI_CBM_CheckImmunities
 
 AI_CBM_VS_Substitute_CurseTypeCheck:
@@ -91,13 +98,9 @@ AI_CBM_VS_Substitute_CurseTypeCheck:
 	goto AI_CBM_CheckEffect
 
 AI_CBM_VS_Substitute_CheckTarget:
-	if_target MOVE_TARGET_SELECTED, AI_CBM_VS_Substitute_CheckEffect
+	if_target MOVE_TARGET_SELECTED, AI_CBM_SubstituteBlocks_SpeedCheck
 	goto AI_CBM_CheckSoundproof
 
-AI_CBM_VS_Substitute_CheckEffect:
-	if_effect EFFECT_ROAR, AI_CBM_CheckSoundproof
-	get_considered_move_effect
-	if_in_bytes AI_CBM_IgnoresSubstitute_EffList, AI_CBM_CheckEffect
 AI_CBM_SubstituteBlocks_SpeedCheck:
 	if_status2 AI_TARGET, STATUS2_SUBSTITUTE, AI_CBM_SubstituteBlocks
 	if_user_faster AI_CBM_CheckImmunities_PreCheck
@@ -110,9 +113,20 @@ AI_CBM_CheckImmunities_PreCheck:
 AI_CBM_CheckImmunities:
 	if_type_effectiveness_with_modifiers AI_EFFECTIVENESS_x0, Score_Minus30
 AI_CBM_TestWhetherToTypeMatchup:
+	if_in_bytes AI_CBM_IgnoreTypeMatchup, AI_CBM_CheckSoundproof
+	if_status2 AI_TARGET, STATUS2_SUBSTITUTE, AI_CBM_TypeMatchup_Modifiers_CheckWonderGuard
+	if_has_move_with_effect AI_TARGET, EFFECT_SUBSTITUTE, AI_CBM_TestWhetherToTypeMatchup_Substitute_HPCheck
+	goto AI_CBM_TestWhetherToTypeMatchup2
+
+AI_CBM_TestWhetherToTypeMatchup_Substitute_HPCheck:
+	if_can_use_substitute AI_TARGET, AI_CBM_TestWhetherToTypeMatchup_Substitute_SpeedCheck
+	goto AI_CBM_TestWhetherToTypeMatchup2
+
+AI_CBM_TestWhetherToTypeMatchup_Substitute_SpeedCheck:
+	if_target_faster AI_CBM_TypeMatchup_Modifiers_CheckWonderGuard
+AI_CBM_TestWhetherToTypeMatchup2:
 	if_effect EFFECT_SPEED_DOWN_HIT, AI_CBM_TestWhetherToTypeMatchup_Speed
 	get_considered_move_effect
-	if_in_bytes AI_CBM_IgnoreTypeMatchup, AI_CBM_CheckSoundproof
 	if_in_bytes AI_CBM_StatusSecondary, AI_CBM_TestWhetherToTypeMatchup_Status
 	if_in_bytes AI_CBM_ItemRemovalAttacks_EffList, AI_CBM_TestWhetherToTypeMatchup_ItemCheck
 	if_move MOVE_SACRED_FIRE, AI_CBM_TestWhetherToTypeMatchup_Status
@@ -268,18 +282,37 @@ AI_CBM_StatLowerImmunity_Hit:
 	if_equal ABILITY_SHIELD_DUST, AI_CBM_StatLowerImmunity_Minus1
 	if_in_bytes AI_CBM_BlockStatLowering, AI_CBM_StatLowerImmunity_Minus1
 	if_side_affecting AI_TARGET, SIDE_STATUS_MIST, AI_CBM_StatLowerImmunity_Minus1
+	if_status2 AI_TARGET, STATUS2_SUBSTITUTE, AI_CBM_StatLowerImmunity_Minus1
+	if_has_move_with_effect AI_TARGET, EFFECT_SUBSTITUTE, AI_CBM_StatLowerImmunity_Hit_Substitute_HPCheck
 	goto AI_CBM_CheckEffect
+
+AI_CBM_StatLowerImmunity_Hit_Substitute_HPCheck:
+	if_can_use_substitute AI_TARGET, AI_CBM_StatLowerImmunity_Hit_Substitute_SpeedCheck
+	goto AI_CBM_CheckEffect
+
+AI_CBM_StatLowerImmunity_Hit_Substitute_SpeedCheck:
+	if_target_faster AI_CBM_CheckEffect
+	goto AI_CBM_StatLowerImmunity_Minus1
 
 AI_CBM_StatLowerImmunity:
 	get_ability AI_TARGET
 	if_in_bytes AI_CBM_BlockStatLowering, AI_CBM_StatLowerImmunity_Minus10
 	if_side_affecting AI_TARGET, SIDE_STATUS_MIST, AI_CBM_StatLowerImmunity_Minus10
+	if_status2 AI_TARGET, STATUS2_SUBSTITUTE, AI_CBM_StatLowerImmunity_Minus10
+	if_has_move_with_effect AI_TARGET, EFFECT_SUBSTITUTE, AI_CBM_StatLowerImmunity_Substitute_HPCheck
 	goto AI_CBM_CheckEffect
 
 AI_CBM_StatLowerImmunity_Minus1:
 	score -1
 	goto AI_CBM_CheckEffect
 
+AI_CBM_StatLowerImmunity_Substitute_HPCheck:
+	if_can_use_substitute AI_TARGET, AI_CBM_StatLowerImmunity_Substitute_SpeedCheck
+	goto AI_CBM_CheckEffect
+
+AI_CBM_StatLowerImmunity_Substitute_SpeedCheck:
+	if_target_faster AI_CBM_CheckEffect
+	if_random_less_than 16, AI_CBM_CheckEffect
 AI_CBM_StatLowerImmunity_Minus10:
 	score -10
 AI_CBM_CheckEffect:
@@ -3716,12 +3749,6 @@ AI_FirstBattle_Flee:
 
 AI_End:
 	end
-
-AI_CBM_SubstituteBlocks_EffList:
-	.byte EFFECT_DREAM_EATER
-	.byte EFFECT_EXPLOSION
-	.byte EFFECT_TRAP
-	.byte -1
 
 AI_CBM_IgnoresSubstitute_EffList:
 	.byte EFFECT_ATTRACT
