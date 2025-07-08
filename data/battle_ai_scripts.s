@@ -1796,7 +1796,7 @@ AI_CV_SelfKO_HighRisk:
 	score -2
 AI_CV_SelfKO_CheckProtect:
 	if_has_move_with_effect AI_TARGET, EFFECT_PROTECT, AI_CV_SelfKO_CheckProtect2
-	goto AI_CV_SuicideCheck
+	goto AI_CV_SelfKO_SubstituteCheck
 
 AI_CV_SelfKO_CheckProtect2:
 	get_protect_count AI_TARGET
@@ -1808,12 +1808,20 @@ AI_CV_SelfKO_RiskOfProtect:
 	score -2
 AI_CV_SelfKO_CheckCanFaint:
 	if_ai_can_faint AI_CV_SelfKO_CanFaint
-	goto AI_CV_SuicideCheck
+	goto AI_CV_SelfKO_SubstituteCheck
 
 AI_CV_SelfKO_CanFaint:
-	if_can_faint AI_CV_SuicideCheck
-	if_random_less_than 32, AI_CV_SuicideCheck
+	if_random_less_than 32, AI_CV_SelfKO_SubstituteCheck
 	score +4
+	goto AI_CV_SelfKO_SubstituteCheck
+
+AI_CV_SelfKO_SubstituteCheck:
+	if_status2 AI_TARGET, STATUS2_SUBSTITUTE, AI_CV_SelfKO_SubstituteCheck_Minus10
+	if_has_move AI_TARGET, MOVE_SUBSTITUTE, AI_CV_SelfKO_SubstituteCheck_Minus10
+	goto AI_CV_SuicideCheck
+
+AI_CV_SelfKO_SubstituteCheck_Minus10:
+	score -10
 	goto AI_CV_SuicideCheck
 
 AI_CV_Grudge:
@@ -3438,7 +3446,7 @@ AI_TTF_TryToEncouragePriority:
 	if_in_bytes AI_TTF_PriorityMoves, AI_TTF_Plus6
 	if_in_bytes AI_TTF_LessPreferred, AI_TTF_EvasionCheck
 	if_effect EFFECT_VITAL_THROW, AI_TTF_AccBonus_1
-	if_effect EFFECT_EXPLOSION, AI_TTF_AccBonus_2
+	if_effect EFFECT_EXPLOSION, AI_TTF_Explosion
 	if_holds_item AI_USER, ITEM_WHITE_HERB, AI_TTF_SubstituteCheck
 	get_considered_move_effect
 	if_in_bytes AI_TTF_NoWhiteHerb, AI_TTF_AccBonus_1
@@ -3447,12 +3455,26 @@ AI_TTF_SubstituteCheck:
 	if_effect EFFECT_SEMI_INVULNERABLE, AI_TTF_EvasionCheck
 	goto AI_TTF_Plus4
 
+AI_TTF_Explosion:
+	if_random_less_than 16, AI_TTF_AccBonus_4
+	if_random_less_than 96, AI_TTF_AccBonus_2
+	if_random_less_than 224, AI_TTF_AccBonus_1
+	end
+
 AI_TTF_Plus6:
 	score +2
 AI_TTF_Plus4:
 	score +4
 AI_TTF_EvasionCheck:
-	if_status3 AI_TARGET, STATUS3_ALWAYS_HITS, AI_TTF_AccBonus_3
+	if_status3 AI_TARGET, STATUS3_ALWAYS_HITS, AI_TTF_AccBonus_4
+	if_effect EFFECT_ALWAYS_HIT, AI_TTF_AccBonus_4
+	if_move MOVE_THUNDER, AI_TTF_RainCheck
+	goto AI_TTF_EvasionCheck2
+
+AI_TTF_RainCheck:
+	get_weather
+	if_equal AI_WEATHER_RAIN, AI_TTF_AccBonus_4
+AI_TTF_EvasionCheck2:
 	if_stat_level_less_than AI_TARGET, STAT_EVASION, -1, AI_TTF_AccBonus_2
 	if_stat_level_less_than AI_TARGET, STAT_EVASION, 0, AI_TTF_AccBonus_CompEyesCheck
 	if_ability AI_USER, ABILITY_COMPOUND_EYES, AI_TTF_AccBonus_LessEvasive
@@ -3463,7 +3485,6 @@ AI_TTF_AccBonus_Hustle_PreCheck:
 	get_curr_move_type
 	if_in_bytes AI_PhysicalTypeList, AI_TTF_AccBonus_Hustle
 AI_TTF_AccBonus:
-	if_effect EFFECT_ALWAYS_HIT, AI_TTF_AccBonus_4
 	get_considered_move_accuracy
 	if_equal 100, AI_TTF_AccBonus_4
 	if_equal 95, AI_TTF_AccBonus_3
@@ -3475,7 +3496,6 @@ AI_TTF_AccBonus:
 	end
 
 AI_TTF_AccBonus_Hustle:
-	if_effect EFFECT_ALWAYS_HIT, AI_TTF_AccBonus_4
 	get_considered_move_accuracy
 	if_equal 100, AI_TTF_AccBonus_3
 	if_equal 95, AI_TTF_AccBonus_3
