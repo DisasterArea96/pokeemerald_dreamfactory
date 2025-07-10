@@ -5159,7 +5159,7 @@ const struct FacilityMon gBattleFrontierMons[NUM_FRONTIER_MONS] =
     },
     [FRONTIER_MON_UMBREON_3] = {
         .species = SPECIES_UMBREON,
-        .moves = {MOVE_FEINT_ATTACK, MOVE_TOXIC, MOVE_REST, MOVE_CHARM},
+        .moves = {MOVE_FAINT_ATTACK, MOVE_TOXIC, MOVE_REST, MOVE_CHARM},
         .itemTableId = BATTLE_FRONTIER_ITEM_CHESTO_BERRY,
         .evSpread = F_EV_SPREAD_HP | F_EV_SPREAD_SP_DEFENSE,
         .nature = NATURE_CALM
