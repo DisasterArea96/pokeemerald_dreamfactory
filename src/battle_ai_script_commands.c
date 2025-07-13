@@ -1808,8 +1808,7 @@ static void Cmd_if_target(void)
 
 static void Cmd_if_type_effectiveness_with_modifiers(void)
 {
-    u8 damageVar, moveType, hpThreshhold, hpThreshholdHit, attackStage, defenseStage;
-    u16 multiplier, divisor;
+    u8 damageVar, moveType, hpThreshhold, hpThreshholdHit;
     u32 side, targetAbility;
 
     DebugPrintf("Checking type effectiveness with modifiers for %d.",gBattleMons[gActiveBattler].species);
@@ -1934,9 +1933,6 @@ static void Cmd_if_type_effectiveness_with_modifiers(void)
             case TYPE_POISON:
             case TYPE_ROCK:
             case TYPE_STEEL:
-                attackStage = gBattleMons[sBattler_AI].statStages[STAT_ATK];
-                defenseStage = gBattleMons[gBattlerTarget].statStages[STAT_DEF];
-
                 if (gSideStatuses[side] & SIDE_STATUS_REFLECT)
                     gBattleMoveDamage = gBattleMoveDamage / 2;
                 break;
@@ -1948,110 +1944,12 @@ static void Cmd_if_type_effectiveness_with_modifiers(void)
             case TYPE_ICE:
             case TYPE_PSYCHIC:
             case TYPE_WATER:
-                attackStage = gBattleMons[sBattler_AI].statStages[STAT_SPATK];
-                defenseStage = gBattleMons[gBattlerTarget].statStages[STAT_SPDEF];
-
                 if (gSideStatuses[side] & SIDE_STATUS_LIGHTSCREEN)
                     gBattleMoveDamage = gBattleMoveDamage / 2;
                 break;
             default:
                 break;
         }
-
-        switch (attackStage)
-        {
-            case 0:
-                multiplier = 33;
-                break;
-            case 1:
-                multiplier = 36;
-                break;
-            case 2:
-                multiplier = 43;
-                break;
-            case 3:
-                multiplier = 50;
-                break;
-            case 4:
-                multiplier = 60;
-                break;
-            case 5:
-                multiplier = 75;
-                break;
-            case 6:
-                multiplier = 100;
-                break;
-            case 7:
-                multiplier = 133;
-                break;
-            case 8:
-                multiplier = 166;
-                break;
-            case 9:
-                multiplier = 200;
-                break;
-            case 10:
-                multiplier = 250;
-                break;
-            case 11:
-                multiplier = 266;
-                break;
-            case 12:
-                multiplier = 300;
-                break;
-            default:
-                multiplier = 100;
-                break;
-        }
-
-        switch (defenseStage)
-        {
-            case 0:
-                divisor = 33;
-                break;
-            case 1:
-                divisor = 36;
-                break;
-            case 2:
-                divisor = 43;
-                break;
-            case 3:
-                divisor = 50;
-                break;
-            case 4:
-                divisor = 60;
-                break;
-            case 5:
-                divisor = 75;
-                break;
-            case 6:
-                divisor = 100;
-                break;
-            case 7:
-                divisor = 133;
-                break;
-            case 8:
-                divisor = 166;
-                break;
-            case 9:
-                divisor = 200;
-                break;
-            case 10:
-                divisor = 250;
-                break;
-            case 11:
-                divisor = 266;
-                break;
-            case 12:
-                divisor = 300;
-                break;
-            default:
-                divisor = 100;
-                break;
-        }
-
-        // Applying stat stage adjustments
-        gBattleMoveDamage = gBattleMoveDamage * multiplier / divisor;
 
         if (gBattleMoveDamage == 0)
             damageVar = AI_EFFECTIVENESS_x0;
@@ -2068,7 +1966,7 @@ static void Cmd_if_type_effectiveness_with_modifiers(void)
     if (gMoveResultFlags & MOVE_RESULT_DOESNT_AFFECT_FOE)
         damageVar = AI_EFFECTIVENESS_x0;
 
-    DebugPrintf("damageVar: %d, gBattleMoveDamage: %d, multiplier: %d, divisor: %d, targetAbility: %d.",damageVar, gBattleMoveDamage, multiplier, divisor);
+    DebugPrintf("damageVar: %d, gBattleMoveDamage: %d, +targetAbility: %d.",damageVar, gBattleMoveDamage+);
 
     if (damageVar == gAIScriptPtr[1])
         gAIScriptPtr = T1_READ_PTR(gAIScriptPtr + 2);
