@@ -1746,8 +1746,6 @@ AI_CV_Disable:
 
 AI_CV_Encore:
 	if_target_faster AI_CV_Encore_Minus2
-	is_first_turn_for AI_TARGET
-	if_equal TRUE, AI_CV_Encore_Minus30
 	get_last_used_bank_move AI_TARGET
 	get_type_effectiveness_from_result
 	if_equal AI_EFFECTIVENESS_x0, AI_CV_Encore_Plus3
