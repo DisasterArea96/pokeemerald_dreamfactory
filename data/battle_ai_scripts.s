@@ -594,12 +594,22 @@ AI_CBM_Spite:
 	if_target_faster AI_CBM_FirstTurnCheck
 	get_target_previous_move_pp
 	if_equal 0, Score_Minus30
+	if_status AI_TARGET, STATUS1_SLEEP, AI_CBM_LastTurnSleepMoveCheck
 	end
 
 AI_CBM_FirstTurnCheck:
 	is_first_turn_for AI_TARGET
 	if_equal TRUE, Score_Minus30
+	if_status AI_TARGET, STATUS1_SLEEP, AI_CBM_WakingCheck
 	end
+
+AI_CBM_WakingCheck:
+	if_waking AI_TARGET, AI_End
+AI_CBM_LastTurnSleepMoveCheck:
+	get_last_used_bank_move AI_TARGET
+	if_effect EFFECT_SLEEP_TALK, AI_End
+	if_effect EFFECT_SNORE, AI_End
+	Score_Minus30
 
 AI_CBM_RainDance:
 	get_weather
