@@ -609,7 +609,7 @@ AI_CBM_LastTurnSleepMoveCheck:
 	get_last_used_bank_move AI_TARGET
 	if_effect EFFECT_SLEEP_TALK, AI_End
 	if_effect EFFECT_SNORE, AI_End
-	Score_Minus30
+	goto Score_Minus30
 
 AI_CBM_RainDance:
 	get_weather
