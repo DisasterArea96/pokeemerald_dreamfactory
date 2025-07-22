@@ -589,16 +589,16 @@ AI_CBM_Disable:
 	goto AI_CBM_Spite
 
 AI_CBM_Encore:
-	if_any_move_encored AI_TARGET, Score_Minus10
+	if_any_move_encored AI_TARGET, Score_Minus30
 AI_CBM_Spite:
-	if_target_faster AI_CBM_FirstTurnAndPPCheck
+	if_target_faster AI_CBM_FirstTurnCheck
+	get_target_previous_move_pp
+	if_equal 0, Score_Minus30
 	end
 
-AI_CBM_FirstTurnAndPPCheck:
+AI_CBM_FirstTurnCheck:
 	is_first_turn_for AI_TARGET
-	if_equal TRUE, Score_Minus10
-	get_target_previous_move_pp
-	if_equal 0, Score_Minus10
+	if_equal TRUE, Score_Minus30
 	end
 
 AI_CBM_RainDance:
