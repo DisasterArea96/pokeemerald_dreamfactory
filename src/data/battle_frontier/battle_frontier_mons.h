@@ -3247,14 +3247,15 @@ const struct FacilityMon gBattleFrontierMons[NUM_FRONTIER_MONS] =
     },
     [FRONTIER_MON_MISDREAVUS_1] = {
         .species = SPECIES_MISDREAVUS,
-        .moves = {MOVE_AERIAL_ACE, MOVE_SHADOW_BALL, MOVE_TAUNT, MOVE_IMPRISON},
-        .itemTableId = BATTLE_FRONTIER_ITEM_SPELL_TAG,
-        .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_SPEED,
-        .nature = NATURE_JOLLY
+        .moves = {MOVE_SUBSTITUTE, MOVE_PROTECT, MOVE_TORMENT, MOVE_SPITE},
+        .itemTableId = BATTLE_FRONTIER_ITEM_LEFTOVERS,
+        .evSpread = F_EV_SPREAD_HP | F_EV_SPREAD_SPEED,
+        .nature = NATURE_TIMID
     },
     [FRONTIER_MON_MISDREAVUS_2] = {
         .species = SPECIES_MISDREAVUS,
-        .moves = {MOVE_RAIN_DANCE, MOVE_THIEF, MOVE_THUNDER, MOVE_PSYCHIC},
+        .moves = {MOVE_IMPRISON, MOVE_MIMIC, MOVE_TOXIC, MOVE_REST},
+        .itemTableId = BATTLE_FRONTIER_ITEM_CHESTO_BERRY,
         .evSpread = F_EV_SPREAD_HP | F_EV_SPREAD_DEFENSE,
         .nature = NATURE_CALM
     },
@@ -4313,24 +4314,24 @@ const struct FacilityMon gBattleFrontierMons[NUM_FRONTIER_MONS] =
     },
     [FRONTIER_MON_HARIYAMA_2] = {
         .species = SPECIES_HARIYAMA,
-        .moves = {MOVE_FAKE_OUT, MOVE_CROSS_CHOP, MOVE_KNOCK_OFF, MOVE_ROCK_TOMB},
+        .moves = {MOVE_FORESIGHT, MOVE_CROSS_CHOP, MOVE_ROCK_TOMB, MOVE_BODY_SLAM},
         .itemTableId = BATTLE_FRONTIER_ITEM_FIGY_BERRY,
-        .evSpread = F_EV_SPREAD_DEFENSE | F_EV_SPREAD_SP_DEFENSE,
+        .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_DEFENSE | F_EV_SPREAD_SP_DEFENSE,
         .nature = NATURE_ADAMANT
     },
     [FRONTIER_MON_HARIYAMA_3] = {
         .species = SPECIES_HARIYAMA,
-        .moves = {MOVE_WHIRLWIND, MOVE_BRICK_BREAK, MOVE_KNOCK_OFF, MOVE_REST},
-        .itemTableId = BATTLE_FRONTIER_ITEM_CHESTO_BERRY,
-        .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_DEFENSE | F_EV_SPREAD_SP_DEFENSE,
+        .moves = {MOVE_FAKE_OUT, MOVE_BRICK_BREAK, MOVE_KNOCK_OFF, MOVE_FOCUS_PUNCH},
+        .itemTableId = BATTLE_FRONTIER_ITEM_ASPEAR_BERRY,
+        .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_DEFENSE | F_EV_SPREAD_SPEED,
         .nature = NATURE_ADAMANT
     },
     [FRONTIER_MON_HARIYAMA_4] = {
         .species = SPECIES_HARIYAMA,
-        .moves = {MOVE_BULK_UP, MOVE_REVERSAL, MOVE_ROCK_SLIDE, MOVE_ENDURE},
-        .itemTableId = BATTLE_FRONTIER_ITEM_SALAC_BERRY,
-        .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_SPEED,
-        .nature = NATURE_JOLLY
+        .moves = {MOVE_WHIRLWIND, MOVE_BRICK_BREAK, MOVE_KNOCK_OFF, MOVE_REST},
+        .itemTableId = BATTLE_FRONTIER_ITEM_CHESTO_BERRY,
+        .evSpread = F_EV_SPREAD_DEFENSE | F_EV_SPREAD_SP_DEFENSE,
+        .nature = NATURE_ADAMANT
     },
     [FRONTIER_MON_HOUNDOOM_1] = {
         .species = SPECIES_HOUNDOOM,
@@ -4810,31 +4811,31 @@ const struct FacilityMon gBattleFrontierMons[NUM_FRONTIER_MONS] =
     },
     [FRONTIER_MON_MISDREAVUS_3] = {
         .species = SPECIES_MISDREAVUS,
-        .moves = {MOVE_DESTINY_BOND, MOVE_SUNNY_DAY, MOVE_THUNDERBOLT, MOVE_PSYCHIC},
-        .itemTableId = BATTLE_FRONTIER_ITEM_LUM_BERRY,
-        .evSpread = F_EV_SPREAD_HP | F_EV_SPREAD_SPEED,
-        .nature = NATURE_TIMID
+        .moves = {MOVE_IMPRISON, MOVE_SHADOW_BALL, MOVE_TAUNT, MOVE_AERIAL_ACE},
+        .itemTableId = BATTLE_FRONTIER_ITEM_SITRUS_BERRY,
+        .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_SPEED,
+        .nature = NATURE_JOLLY
     },
     [FRONTIER_MON_MISDREAVUS_4] = {
-        .species = SPECIES_MISDREAVUS,
-        .moves = {MOVE_DESTINY_BOND, MOVE_ENDURE, MOVE_THUNDERBOLT, MOVE_PSYCHIC},
-        .itemTableId = BATTLE_FRONTIER_ITEM_SALAC_BERRY,
-        .evSpread = F_EV_SPREAD_SP_ATTACK | F_EV_SPREAD_SPEED,
-        .nature = NATURE_MODEST
-    },
-    [FRONTIER_MON_MISDREAVUS_5] = {
-        .species = SPECIES_MISDREAVUS,
-        .moves = {MOVE_SUBSTITUTE, MOVE_CALM_MIND, MOVE_THUNDERBOLT, MOVE_PSYCHIC},
-        .itemTableId = BATTLE_FRONTIER_ITEM_PETAYA_BERRY,
-        .evSpread = F_EV_SPREAD_SP_ATTACK | F_EV_SPREAD_SPEED,
-        .nature = NATURE_TIMID
-    },
-    [FRONTIER_MON_MISDREAVUS_6] = {
         .species = SPECIES_MISDREAVUS,
         .moves = {MOVE_PAIN_SPLIT, MOVE_THUNDER_WAVE, MOVE_TAUNT, MOVE_PSYCHIC},
         .itemTableId = BATTLE_FRONTIER_ITEM_LUM_BERRY,
         .evSpread = F_EV_SPREAD_DEFENSE | F_EV_SPREAD_SP_ATTACK | F_EV_SPREAD_SP_DEFENSE,
         .nature = NATURE_CALM
+    },
+    [FRONTIER_MON_MISDREAVUS_5] = {
+        .species = SPECIES_MISDREAVUS,
+        .moves = {MOVE_DESTINY_BOND, MOVE_HIDDEN_POWER, MOVE_THUNDERBOLT, MOVE_PSYCHIC},
+        .itemTableId = BATTLE_FRONTIER_ITEM_LUM_BERRY,
+        .evSpread = F_EV_SPREAD_SP_ATTACK | F_EV_SPREAD_SPEED,
+        .nature = NATURE_TIMID
+    },
+    [FRONTIER_MON_MISDREAVUS_6] = {
+        .species = SPECIES_MISDREAVUS,
+        .moves = {MOVE_SUBSTITUTE, MOVE_CALM_MIND, MOVE_THUNDERBOLT, MOVE_PSYCHIC},
+        .itemTableId = BATTLE_FRONTIER_ITEM_PETAYA_BERRY,
+        .evSpread = F_EV_SPREAD_SP_ATTACK | F_EV_SPREAD_SPEED,
+        .nature = NATURE_TIMID
     },
     [FRONTIER_MON_OMASTAR_3] = {
         .species = SPECIES_OMASTAR,
@@ -6249,42 +6250,42 @@ const struct FacilityMon gBattleFrontierMons[NUM_FRONTIER_MONS] =
     },
     [FRONTIER_MON_HARIYAMA_7] = {
         .species = SPECIES_HARIYAMA,
-        .moves = {MOVE_BULK_UP, MOVE_CROSS_CHOP, MOVE_ROCK_SLIDE, MOVE_SUBSTITUTE},
+        .moves = {MOVE_BULK_UP, MOVE_CROSS_CHOP, MOVE_ROCK_SLIDE, MOVE_DOUBLE_EDGE},
         .itemTableId = BATTLE_FRONTIER_ITEM_SALAC_BERRY,
         .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_SP_DEFENSE | F_EV_SPREAD_SPEED,
         .nature = NATURE_JOLLY
     },
     [FRONTIER_MON_HARIYAMA_8] = {
         .species = SPECIES_HARIYAMA,
-        .moves = {MOVE_FORESIGHT, MOVE_CROSS_CHOP, MOVE_ROCK_SLIDE, MOVE_BODY_SLAM},
-        .itemTableId = BATTLE_FRONTIER_ITEM_LUM_BERRY,
-        .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_DEFENSE | F_EV_SPREAD_SP_DEFENSE,
-        .nature = NATURE_ADAMANT
-    },
-    [FRONTIER_MON_HARIYAMA_9] = {
-        .species = SPECIES_HARIYAMA,
         .moves = {MOVE_FAKE_OUT, MOVE_CROSS_CHOP, MOVE_ROCK_SLIDE, MOVE_EARTHQUAKE},
         .itemTableId = BATTLE_FRONTIER_ITEM_CHOICE_BAND,
         .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_SPEED,
         .nature = NATURE_JOLLY
     },
-    [FRONTIER_MON_HARIYAMA_10] = {
+    [FRONTIER_MON_HARIYAMA_9] = {
         .species = SPECIES_HARIYAMA,
         .moves = {MOVE_ARM_THRUST, MOVE_CROSS_CHOP, MOVE_ROCK_SLIDE, MOVE_EARTHQUAKE},
         .itemTableId = BATTLE_FRONTIER_ITEM_BLACK_BELT,
         .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_DEFENSE | F_EV_SPREAD_SP_DEFENSE,
         .nature = NATURE_ADAMANT
     },
-    [FRONTIER_MON_HARIYAMA_11] = {
+    [FRONTIER_MON_HARIYAMA_10] = {
         .species = SPECIES_HARIYAMA,
-        .moves = {MOVE_FOCUS_PUNCH, MOVE_REVENGE, MOVE_ROCK_SLIDE, MOVE_COUNTER},
+        .moves = {MOVE_COUNTER, MOVE_REVENGE, MOVE_ROCK_SLIDE, MOVE_FOCUS_PUNCH},
         .itemTableId = BATTLE_FRONTIER_ITEM_BLACK_BELT,
         .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_DEFENSE | F_EV_SPREAD_SP_DEFENSE,
         .nature = NATURE_ADAMANT
     },
+    [FRONTIER_MON_HARIYAMA_11] = {
+        .species = SPECIES_HARIYAMA,
+        .moves = {MOVE_SUBSTITUTE, MOVE_REVERSAL, MOVE_ROCK_SLIDE, MOVE_FOCUS_PUNCH},
+        .itemTableId = BATTLE_FRONTIER_ITEM_SALAC_BERRY,
+        .evSpread = F_EV_SPREAD_ATTACK | F_EV_SPREAD_SPEED,
+        .nature = NATURE_JOLLY
+    },
     [FRONTIER_MON_HARIYAMA_12] = {
         .species = SPECIES_HARIYAMA,
-        .moves = {MOVE_FOCUS_PUNCH, MOVE_BRICK_BREAK, MOVE_ROCK_SLIDE, MOVE_SUBSTITUTE},
+        .moves = {MOVE_SUBSTITUTE, MOVE_BRICK_BREAK, MOVE_ROCK_SLIDE, MOVE_FOCUS_PUNCH},
         .itemTableId = BATTLE_FRONTIER_ITEM_LIECHI_BERRY,
         .evSpread = F_EV_SPREAD_HP | F_EV_SPREAD_ATTACK,
         .nature = NATURE_ADAMANT
@@ -8337,7 +8338,7 @@ const struct FacilityMon gBattleFrontierMons[NUM_FRONTIER_MONS] =
         .moves = {MOVE_PSYWAVE, MOVE_TOXIC, MOVE_RECOVER, MOVE_REFRESH},
         .itemTableId = BATTLE_FRONTIER_ITEM_MAIL,
         .evSpread = F_EV_SPREAD_HP | F_EV_SPREAD_SP_DEFENSE,
-        .nature = NATURE_CALM
+        .nature = NATURE_CAREFUL
     },
     [FRONTIER_MON_LATIAS_2] = {
         .species = SPECIES_LATIAS,
