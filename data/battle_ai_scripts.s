@@ -636,7 +636,7 @@ AI_CBM_Roar:
 
 AI_CBM_FakeOut:
 	is_first_turn_for AI_USER
-	if_equal FALSE, Score_Minus10
+	if_equal FALSE, Score_Minus40
 	end
 
 AI_CBM_Stockpile:
@@ -849,6 +849,10 @@ Score_Minus12:
 
 Score_Minus30:
 	score -30
+	end
+
+Score_Minus40:
+	score -40
 	end
 
 AI_CheckViability:
