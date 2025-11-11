@@ -27,10 +27,11 @@
 #define AI_EFFECTIVENESS_x0     0
 
 // ai weather
-#define AI_WEATHER_SUN 0
-#define AI_WEATHER_RAIN 1
-#define AI_WEATHER_SANDSTORM 2
-#define AI_WEATHER_HAIL 3
+#define AI_WEATHER_CLEAR 0
+#define AI_WEATHER_SUN 1
+#define AI_WEATHER_RAIN 2
+#define AI_WEATHER_SANDSTORM 3
+#define AI_WEATHER_HAIL 4
 
 // get_how_powerful_move_is
 #define MOVE_POWER_OTHER        0

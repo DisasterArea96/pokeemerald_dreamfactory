@@ -2056,6 +2056,8 @@ static void Cmd_get_weather(void)
 {
     DebugPrintf("Running get_weather");
 
+    AI_THINKING_STRUCT->funcResult = AI_WEATHER_CLEAR;
+
     if (gBattleWeather & B_WEATHER_RAIN)
         AI_THINKING_STRUCT->funcResult = AI_WEATHER_RAIN;
     if (gBattleWeather & B_WEATHER_SANDSTORM)
