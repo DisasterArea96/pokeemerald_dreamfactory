@@ -374,7 +374,7 @@ struct BattleFrontier
     /*0xBEB*/ struct BattleTowerInterview towerInterview;
     /*0xBEC*/ struct BattleTowerEReaderTrainer ereaderTrainer;
     /*0xCA8*/ u8 challengeStatus;
-    /*0xCA9*/ u8 lvlMode:2;
+    /*0xCA9*/ u8 lvlMode:4;
               u8 challengePaused:1;
               u8 disableRecordBattle:1;
               //u8 padding1:4;
