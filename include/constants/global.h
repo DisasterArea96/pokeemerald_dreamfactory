@@ -73,9 +73,11 @@
 #define HALL_RECORDS_COUNT 3
 
 // Battle Frontier level modes.
-#define FRONTIER_LVL_50         0
-#define FRONTIER_LVL_OPEN       1
-#define FRONTIER_LVL_MODE_COUNT 2
+#define FRONTIER_LVL_5          0
+#define FRONTIER_LVL_50         1
+#define FRONTIER_LVL_OPEN       2
+#define FRONTIER_LVL_FM         3
+#define FRONTIER_LVL_MODE_COUNT 4
 #define FRONTIER_LVL_TENT       FRONTIER_LVL_MODE_COUNT // Special usage for indicating Battle Tent
 
 #define TRAINER_ID_LENGTH 4
