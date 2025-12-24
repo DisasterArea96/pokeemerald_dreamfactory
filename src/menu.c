@@ -2156,12 +2156,20 @@ void BufferSaveMenuText(u8 textId, u8 *dest, u8 color)
             *string = flagCount + CHAR_0;
             *endOfString = EOS;
             break;
-        case SAVE_MENU_OL_REC:
-            record = FactoryGetRecordWinStreak(FRONTIER_MODE_SINGLES, FRONTIER_LVL_OPEN);
+        case SAVE_MENU_5_REC:
+            record = FactoryGetRecordWinStreak(FRONTIER_MODE_SINGLES, FRONTIER_LVL_5);
             string = ConvertIntToDecimalStringN(string, record, STR_CONV_MODE_RIGHT_ALIGN, 4);
             break;
         case SAVE_MENU_50_REC:
             record = FactoryGetRecordWinStreak(FRONTIER_MODE_SINGLES, FRONTIER_LVL_50);
+            string = ConvertIntToDecimalStringN(string, record, STR_CONV_MODE_RIGHT_ALIGN, 4);
+            break;
+        case SAVE_MENU_OL_REC:
+            record = FactoryGetRecordWinStreak(FRONTIER_MODE_SINGLES, FRONTIER_LVL_OPEN);
+            string = ConvertIntToDecimalStringN(string, record, STR_CONV_MODE_RIGHT_ALIGN, 4);
+            break;
+        case SAVE_MENU_FM_REC:
+            record = FactoryGetRecordWinStreak(FRONTIER_MODE_SINGLES, FRONTIER_LVL_FM);
             string = ConvertIntToDecimalStringN(string, record, STR_CONV_MODE_RIGHT_ALIGN, 4);
             break;
     }

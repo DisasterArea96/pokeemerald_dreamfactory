@@ -174,13 +174,23 @@ static const u8 sFixedIVTable[][2] =
 
 static const u16 sInitialRentalMonRanges[][2] =
 {
+    // Level 5 -- for testing purposes, just use level 50 mode pools
+    {FRONTIER_MON_ABRA_1,   FRONTIER_MON_YANMA_2},      // A
+    {FRONTIER_MON_ABRA_1,   FRONTIER_MON_YANMA_2},      // A
+    {FRONTIER_MON_ABRA_1,   FRONTIER_MON_YANMA_2},      // A
+    {FRONTIER_MON_ABSOL_3,   FRONTIER_MON_XATU_4},      // B, C
+    {FRONTIER_MON_ABSOL_3,   FRONTIER_MON_XATU_4},      // B, C
+    {FRONTIER_MON_ABSOL_3,   FRONTIER_MON_XATU_4},      // B, C
+    {FRONTIER_MON_AGGRON_1,  FRONTIER_MON_ZANGOOSE_4},  // C, D
+    {FRONTIER_MON_AGGRON_1,  FRONTIER_MON_ZANGOOSE_4},  // C, D
+
     // Level 50
-    {FRONTIER_MON_ABRA_1,   FRONTIER_MON_YANMA_2},    // A
-    {FRONTIER_MON_ABRA_1,   FRONTIER_MON_YANMA_2},    // A
-    {FRONTIER_MON_ABRA_1,   FRONTIER_MON_YANMA_2},    // A
-    {FRONTIER_MON_ABSOL_3,   FRONTIER_MON_XATU_4}, // B, C
-    {FRONTIER_MON_ABSOL_3,   FRONTIER_MON_XATU_4}, // B, C
-    {FRONTIER_MON_ABSOL_3,   FRONTIER_MON_XATU_4}, // B, C
+    {FRONTIER_MON_ABRA_1,   FRONTIER_MON_YANMA_2},      // A
+    {FRONTIER_MON_ABRA_1,   FRONTIER_MON_YANMA_2},      // A
+    {FRONTIER_MON_ABRA_1,   FRONTIER_MON_YANMA_2},      // A
+    {FRONTIER_MON_ABSOL_3,   FRONTIER_MON_XATU_4},      // B, C
+    {FRONTIER_MON_ABSOL_3,   FRONTIER_MON_XATU_4},      // B, C
+    {FRONTIER_MON_ABSOL_3,   FRONTIER_MON_XATU_4},      // B, C
     {FRONTIER_MON_AGGRON_1,  FRONTIER_MON_ZANGOOSE_4},  // C, D
     {FRONTIER_MON_AGGRON_1,  FRONTIER_MON_ZANGOOSE_4},  // C, D
 
@@ -188,11 +198,19 @@ static const u16 sInitialRentalMonRanges[][2] =
     {FRONTIER_MON_AGGRON_1, FRONTIER_MON_ZANGOOSE_4},   // C, D
     {FRONTIER_MON_AGGRON_1, FRONTIER_MON_ZANGOOSE_4},   // C, D
     {FRONTIER_MON_AGGRON_1, FRONTIER_MON_ZANGOOSE_4},   // C, D
-    {FRONTIER_MON_AERODACTYL_1, FRONTIER_MON_ZAPDOS_8},    // D, E
-    {FRONTIER_MON_AERODACTYL_1, FRONTIER_MON_ZAPDOS_8},    // D, E
-    {FRONTIER_MON_AERODACTYL_1, FRONTIER_MON_ZAPDOS_8},    // D, E
-    {FRONTIER_MON_AERODACTYL_1, NUM_FRONTIER_MONS - 1},    // D, E, F
-    {FRONTIER_MON_AERODACTYL_1, NUM_FRONTIER_MONS - 1},    // D, E, F
+    {FRONTIER_MON_AERODACTYL_1, FRONTIER_MON_ZAPDOS_8}, // D, E
+    {FRONTIER_MON_AERODACTYL_1, FRONTIER_MON_ZAPDOS_8}, // D, E
+    {FRONTIER_MON_AERODACTYL_1, FRONTIER_MON_ZAPDOS_8}, // D, E
+
+    // Final Mode ("No Mans Land")
+    {FRONTIER_MON_AERODACTYL_1, NUM_FRONTIER_MONS - 1}, // D, E, F
+    {FRONTIER_MON_AERODACTYL_1, NUM_FRONTIER_MONS - 1}, // D, E, F
+    {FRONTIER_MON_AERODACTYL_1, NUM_FRONTIER_MONS - 1}, // D, E, F
+    {FRONTIER_MON_AERODACTYL_1, NUM_FRONTIER_MONS - 1}, // D, E, F
+    {FRONTIER_MON_AERODACTYL_1, NUM_FRONTIER_MONS - 1}, // D, E, F
+    {FRONTIER_MON_AERODACTYL_1, NUM_FRONTIER_MONS - 1}, // D, E, F
+    {FRONTIER_MON_AERODACTYL_1, NUM_FRONTIER_MONS - 1}, // D, E, F
+    {FRONTIER_MON_AERODACTYL_1, NUM_FRONTIER_MONS - 1}, // D, E, F
 };
 
 // code
@@ -417,6 +435,7 @@ static void SetPlayerAndOpponentParties(void)
     u8 ivs;
     u8 friendship;
 
+    //Separate handling for battle tent
     if (gSaveBlock2Ptr->frontier.lvlMode == FRONTIER_LVL_TENT)
     {
         gFacilityTrainerMons = gSlateportBattleTentMons;
@@ -425,10 +444,17 @@ static void SetPlayerAndOpponentParties(void)
     else
     {
         gFacilityTrainerMons = gBattleFrontierMons;
-        if (gSaveBlock2Ptr->frontier.lvlMode != FRONTIER_LVL_50)
-            monLevel = FRONTIER_MAX_LEVEL_OPEN;
-        else
-            monLevel = FRONTIER_MAX_LEVEL_50;
+
+        //Set the max. level correctnyl based on the level mode
+        switch (gSaveBlock2Ptr->frontier.lvlMode) {
+            case FRONTIER_LVL_5:
+                monLevel = FRONTIER_MAX_LEVEL_5;
+                break;
+            case FRONTIER_LVL_50:
+                monLevel = FRONTIER_MAX_LEVEL_50;
+                break;
+            default: FRONTIER_MAX_LEVEL_OPEN;
+        }
     }
 
     if (gSpecialVar_0x8005 < 2)
@@ -543,16 +569,8 @@ static void GenerateInitialRentalMons(void)
         factoryBattleMode = FRONTIER_MODE_SINGLES;
 
     gFacilityTrainerMons = gBattleFrontierMons;
-    if (gSaveBlock2Ptr->frontier.lvlMode != FRONTIER_LVL_50)
-    {
-        factoryLvlMode = FRONTIER_LVL_OPEN;
-        firstMonId = 0;
-    }
-    else
-    {
-        factoryLvlMode = FRONTIER_LVL_50;
-        firstMonId = 0;
-    }
+    factoryLvlMode = gSaveBlock2Ptr->frontier.lvlMode;
+    firstMonId = 0;
     rentalRank = GetNumPastRentalsRank(factoryBattleMode, factoryLvlMode);
 
     i = 0;
@@ -816,10 +834,20 @@ static u16 GetFactoryMonId(u8 lvlMode, u8 challengeNum, bool8 useBetterRange)
     u16 numMons, monId;
     u16 adder; // Used to skip past early mons for open level
 
-    if (lvlMode == FRONTIER_LVL_50)
-        adder = 0;
-    else
-        adder = 8;
+    // Set the adder to loop through the list of pokemon correctly based on the level & mode
+    switch (lvlMode) {
+        case FRONTIER_LVL_5:
+            adder = 0;
+            break;
+        case FRONTIER_LVL_50:
+            adder = 8;
+            break;
+        case FRONTIER_LVL_OPEN:
+            adder = 16;
+            break;
+        default:
+            adder = 22;
+    }
 
     if (challengeNum < 7)
     {
