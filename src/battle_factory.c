@@ -453,7 +453,8 @@ static void SetPlayerAndOpponentParties(void)
             case FRONTIER_LVL_50:
                 monLevel = FRONTIER_MAX_LEVEL_50;
                 break;
-            default: FRONTIER_MAX_LEVEL_OPEN;
+            default:
+                monLevel = FRONTIER_MAX_LEVEL_OPEN;
         }
     }
 

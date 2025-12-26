@@ -698,8 +698,10 @@ static const u8 *const sRecordsWindowChallengeTexts[][2] =
 
 static const u8 *const sLevelModeText[] =
 {
+    [FRONTIER_LVL_5]    = gText_RecordsLv5,
     [FRONTIER_LVL_50]   = gText_RecordsLv50,
     [FRONTIER_LVL_OPEN] = gText_RecordsOpenLevel,
+    [FRONTIER_LVL_FM]   = gText_RecordsFinalMode,
 };
 
 static const u8 *const sHallFacilityToRecordsText[] =
@@ -2006,6 +2008,8 @@ static void AppendIfValid(u16 species, u16 heldItem, u16 hp, u8 lvlMode, u8 monL
         ;
 
     if (gFrontierBannedSpecies[i] != 0xFFFF)
+        return;
+    if (lvlMode == FRONTIER_LVL_5 && monLevel > FRONTIER_MAX_LEVEL_5)
         return;
     if (lvlMode == FRONTIER_LVL_50 && monLevel > FRONTIER_MAX_LEVEL_50)
         return;
