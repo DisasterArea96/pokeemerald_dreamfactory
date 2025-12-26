@@ -147,16 +147,16 @@ static void (* const sBattleFactoryFunctions[])(void) =
     [BATTLE_FACTORY_FUNC_RESET_HELD_ITEMS]       = RestorePlayerPartyHeldItems,
 };
 
-static const u32 sWinStreakFlags[][2] =
+static const u32 sWinStreakFlags[][4] =
 {
-    {STREAK_FACTORY_SINGLES_50, STREAK_FACTORY_SINGLES_OPEN},
-    {STREAK_FACTORY_DOUBLES_50, STREAK_FACTORY_DOUBLES_OPEN},
+    {STREAK_FACTORY_SINGLES_5, STREAK_FACTORY_SINGLES_50, STREAK_FACTORY_SINGLES_OPEN, STREAK_FACTORY_SINGLES_FM},
+    {STREAK_FACTORY_DOUBLES_5, STREAK_FACTORY_DOUBLES_50, STREAK_FACTORY_DOUBLES_OPEN, STREAK_FACTORY_SINGLES_FM},
 };
 
-static const u32 sWinStreakMasks[][2] =
+static const u32 sWinStreakMasks[][4] =
 {
-    {~(STREAK_FACTORY_SINGLES_50), ~(STREAK_FACTORY_SINGLES_OPEN)},
-    {~(STREAK_FACTORY_DOUBLES_50), ~(STREAK_FACTORY_DOUBLES_OPEN)},
+    {~(STREAK_FACTORY_SINGLES_5), ~(STREAK_FACTORY_SINGLES_50), ~(STREAK_FACTORY_SINGLES_OPEN), ~(STREAK_FACTORY_SINGLES_FM)},
+    {~(STREAK_FACTORY_DOUBLES_5), ~(STREAK_FACTORY_DOUBLES_50), ~(STREAK_FACTORY_DOUBLES_OPEN), ~(STREAK_FACTORY_DOUBLES_FM)},
 };
 
 static const u8 sFixedIVTable[][2] =
@@ -445,7 +445,7 @@ static void SetPlayerAndOpponentParties(void)
     {
         gFacilityTrainerMons = gBattleFrontierMons;
 
-        //Set the max. level correctnyl based on the level mode
+        //Set the max. level correctly based on the level mode
         switch (gSaveBlock2Ptr->frontier.lvlMode) {
             case FRONTIER_LVL_5:
                 monLevel = FRONTIER_MAX_LEVEL_5;
@@ -545,7 +545,7 @@ static void GenerateInitialRentalMons(void)
     u8 battleMode;
     u8 lvlMode;
     u8 challengeNum;
-    u8 factoryLvlMode;
+    u8 LvlMode;
     u8 factoryBattleMode;
     u8 rentalRank;
     u16 monId;
@@ -569,17 +569,16 @@ static void GenerateInitialRentalMons(void)
         factoryBattleMode = FRONTIER_MODE_SINGLES;
 
     gFacilityTrainerMons = gBattleFrontierMons;
-    factoryLvlMode = gSaveBlock2Ptr->frontier.lvlMode;
     firstMonId = 0;
-    rentalRank = GetNumPastRentalsRank(factoryBattleMode, factoryLvlMode);
+    rentalRank = GetNumPastRentalsRank(factoryBattleMode, LvlMode);
 
     i = 0;
     while (i != PARTY_SIZE)
     {
         if (i < rentalRank) // The more times the player has rented, the more initial rentals are generated from a better set of pokemon
-            monId = GetFactoryMonId(factoryLvlMode, challengeNum, TRUE);
+            monId = GetFactoryMonId(LvlMode, challengeNum, TRUE);
         else
-            monId = GetFactoryMonId(factoryLvlMode, challengeNum, FALSE);
+            monId = GetFactoryMonId(LvlMode, challengeNum, FALSE);
 
         if (gFacilityTrainerMons[monId].species == SPECIES_UNOWN)
             continue;
