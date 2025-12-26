@@ -1368,8 +1368,10 @@ extern const u8 gText_FacilityMulti[];
 extern const u8 gText_FacilityLink[];
 extern const u8 gText_Facility[];
 
+extern const u8 gText_RecordsLv5[];
 extern const u8 gText_RecordsLv50[];
 extern const u8 gText_RecordsOpenLevel[];
+extern const u8 gText_RecordsFinalMode[];
 extern const u8 gText_FrontierFacilityWinStreak[];
 extern const u8 gText_FrontierFacilityClearStreak[];
 extern const u8 gText_FrontierFacilityRoomsCleared[];
