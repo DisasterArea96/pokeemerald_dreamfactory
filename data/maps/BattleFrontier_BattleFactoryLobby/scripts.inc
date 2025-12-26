@@ -140,7 +140,7 @@ BattleFrontier_BattleFactoryLobby_EventScript_AskTakeChallenge::
 BattleFrontier_BattleFactoryLobby_EventScript_TryEnterChallenge::
 	message BattleFrontier_BattleFactoryLobby_Text_WhichLevelMode
 	waitmessage
-	multichoice 17, 6, MULTI_LEVEL_MODE, FALSE
+	multichoice 17, 1, MULTI_LEVEL_MODE, FALSE
 	switch VAR_RESULT
 	case FRONTIER_LVL_TENT, BattleFrontier_BattleFactoryLobby_EventScript_CancelChallenge
 	case MULTI_B_PRESSED, BattleFrontier_BattleFactoryLobby_EventScript_CancelChallenge
@@ -355,8 +355,7 @@ BattleFrontier_BattleFactoryLobby_Text_LookForwardToNextVisit:
 	.string "We look forward to your next visit.$"
 
 BattleFrontier_BattleFactoryLobby_Text_WhichLevelMode:
-	.string "Which level do you wish to challenge?\n"
-	.string "Level 50 or Open Level?$"
+	.string "Which level do you wish to challenge?$"
 
 BattleFrontier_BattleFactoryLobby_Text_OkayToSaveBeforeChallenge:
 	.string "Before you begin your challenge,\n"

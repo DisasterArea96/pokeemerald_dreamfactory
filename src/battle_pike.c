@@ -90,6 +90,90 @@ static bool8 StatusInflictionFadeOut(struct Task *task);
 static bool8 StatusInflictionFadeIn(struct Task *task);
 
 // Const rom data.
+static const struct PikeWildMon sLvl5_Mons1[] =
+{
+    {
+        .species = SPECIES_EKANS,
+        .levelDelta = 1,
+        .moves = {MOVE_TOXIC, MOVE_GLARE, MOVE_GLARE, MOVE_SLUDGE_BOMB}
+    },
+    {
+        .species = SPECIES_SLOWPOKE,
+        .levelDelta = 1,
+        .moves = {MOVE_TOXIC, MOVE_THUNDER_WAVE, MOVE_ICE_BEAM, MOVE_WATER_PULSE}
+    },
+    {
+        .species = SPECIES_DUSKULL,
+        .levelDelta = 1,
+        .moves = {MOVE_THIEF, MOVE_CURSE, MOVE_DISABLE, MOVE_NIGHT_SHADE}
+    }
+};
+
+static const struct PikeWildMon sLvl5_Mons2[] =
+{
+    {
+        .species = SPECIES_EKANS,
+        .levelDelta = 1,
+        .moves = {MOVE_TOXIC, MOVE_GLARE, MOVE_GLARE, MOVE_SLUDGE_BOMB}
+    },
+    {
+        .species = SPECIES_SLOWPOKE,
+        .levelDelta = 1,
+        .moves = {MOVE_TOXIC, MOVE_THUNDER_WAVE, MOVE_ICE_BEAM, MOVE_WATER_PULSE}
+    },
+    {
+        .species = SPECIES_VOLTORB,
+        .levelDelta = 1,
+        .moves = {MOVE_EXPLOSION, MOVE_SELF_DESTRUCT, MOVE_THUNDERBOLT, MOVE_TOXIC}
+    }
+};
+
+static const struct PikeWildMon sLvl5_Mons3[] =
+{
+    {
+        .species = SPECIES_EKANS,
+        .levelDelta = 1,
+        .moves = {MOVE_TOXIC, MOVE_GLARE, MOVE_GLARE, MOVE_SLUDGE_BOMB}
+    },
+    {
+        .species = SPECIES_SLOWPOKE,
+        .levelDelta = 1,
+        .moves = {MOVE_TOXIC, MOVE_THUNDER_WAVE, MOVE_ICE_BEAM, MOVE_WATER_PULSE}
+    },
+    {
+        .species = SPECIES_SHROOMISH,
+        .levelDelta = 1,
+        .moves = {MOVE_SPORE, MOVE_STUN_SPORE, MOVE_POISON_POWDER, MOVE_BULLET_SEED}
+    }
+};
+
+static const struct PikeWildMon sLvl5_Mons4[] =
+{
+    {
+        .species = SPECIES_EKANS,
+        .levelDelta = 1,
+        .moves = {MOVE_TOXIC, MOVE_GLARE, MOVE_GLARE, MOVE_SLUDGE_BOMB}
+    },
+    {
+        .species = SPECIES_SLOWPOKE,
+        .levelDelta = 1,
+        .moves = {MOVE_TOXIC, MOVE_THUNDER_WAVE, MOVE_ICE_BEAM, MOVE_WATER_PULSE}
+    },
+    {
+        .species = SPECIES_WYNAUT,
+        .levelDelta = 1,
+        .moves = {MOVE_COUNTER, MOVE_MIRROR_COAT, MOVE_SAFEGUARD, MOVE_DESTINY_BOND}
+    }
+};
+
+static const struct PikeWildMon *const sLvl5Mons[] =
+{
+    sLvl5_Mons1,
+    sLvl5_Mons2,
+    sLvl5_Mons3,
+    sLvl5_Mons4
+};
+
 static const struct PikeWildMon sLvl50_Mons1[] =
 {
     {
@@ -258,10 +342,12 @@ static const struct PikeWildMon *const sLvlOpenMons[] =
     sLvlOpen_Mons4
 };
 
-static const struct PikeWildMon *const *const sWildMons[2] =
+static const struct PikeWildMon *const *const sWildMons[4] =
 {
+    [FRONTIER_LVL_5]   = sLvl5Mons,
     [FRONTIER_LVL_50]   = sLvl50Mons,
-    [FRONTIER_LVL_OPEN] = sLvlOpenMons
+    [FRONTIER_LVL_OPEN] = sLvlOpenMons,
+    [FRONTIER_LVL_FM] = sLvlOpenMons
 };
 
 static const struct PikeRoomNPC sNPCTable[] =
