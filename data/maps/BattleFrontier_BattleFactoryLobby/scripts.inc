@@ -140,7 +140,7 @@ BattleFrontier_BattleFactoryLobby_EventScript_AskTakeChallenge::
 BattleFrontier_BattleFactoryLobby_EventScript_TryEnterChallenge::
 	message BattleFrontier_BattleFactoryLobby_Text_WhichLevelMode
 	waitmessage
-	multichoice 17, 1, MULTI_LEVEL_MODE, FALSE
+	multichoice 17, 2, MULTI_LEVEL_MODE, FALSE
 	switch VAR_RESULT
 	case FRONTIER_LVL_TENT, BattleFrontier_BattleFactoryLobby_EventScript_CancelChallenge
 	case MULTI_B_PRESSED, BattleFrontier_BattleFactoryLobby_EventScript_CancelChallenge
