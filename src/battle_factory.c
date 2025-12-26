@@ -546,7 +546,6 @@ static void GenerateInitialRentalMons(void)
     u8 battleMode;
     u8 lvlMode;
     u8 challengeNum;
-    u8 LvlMode;
     u8 factoryBattleMode;
     u8 rentalRank;
     u16 monId;
@@ -571,15 +570,15 @@ static void GenerateInitialRentalMons(void)
 
     gFacilityTrainerMons = gBattleFrontierMons;
     firstMonId = 0;
-    rentalRank = GetNumPastRentalsRank(factoryBattleMode, LvlMode);
+    rentalRank = GetNumPastRentalsRank(factoryBattleMode, lvlMode);
 
     i = 0;
     while (i != PARTY_SIZE)
     {
         if (i < rentalRank) // The more times the player has rented, the more initial rentals are generated from a better set of pokemon
-            monId = GetFactoryMonId(LvlMode, challengeNum, TRUE);
+            monId = GetFactoryMonId(lvlMode, challengeNum, TRUE);
         else
-            monId = GetFactoryMonId(LvlMode, challengeNum, FALSE);
+            monId = GetFactoryMonId(lvlMode, challengeNum, FALSE);
 
         if (gFacilityTrainerMons[monId].species == SPECIES_UNOWN)
             continue;
