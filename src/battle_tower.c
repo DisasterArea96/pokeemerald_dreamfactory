@@ -3305,19 +3305,18 @@ u8 GetFrontierEnemyMonLevel(u8 lvlMode)
 {
     u8 level;
 
-    switch (lvlMode)
-    {
-    case FRONTIER_LVL_5:
-        level = FRONTIER_MAX_LEVEL_5;
-        break;
-    case FRONTIER_LVL_50:
-        level = FRONTIER_MAX_LEVEL_50;
-        break;
-    default:
-        level = GetHighestLevelInPlayerParty();
-        if (level < FRONTIER_MIN_LEVEL_OPEN)
-            level = FRONTIER_MIN_LEVEL_OPEN;
-        break;
+    switch (lvlMode) {
+        case FRONTIER_LVL_5:
+            level = FRONTIER_MAX_LEVEL_5;
+            break;
+        case FRONTIER_LVL_50:
+            level = FRONTIER_MAX_LEVEL_50;
+            break;
+        default:
+            level = GetHighestLevelInPlayerParty();
+            if (level < FRONTIER_MIN_LEVEL_OPEN)
+                level = FRONTIER_MIN_LEVEL_OPEN;
+            break;
     }
 
     return level;

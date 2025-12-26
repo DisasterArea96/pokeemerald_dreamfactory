@@ -1372,8 +1372,7 @@ static void FactoryPrintPrevOrCurrentStreak(u8 battleMode, u8 lvlMode, u8 x1, u8
     bool8 isCurrent;
     u16 winStreak = FactoryGetWinStreak(battleMode, lvlMode);
     u16 rents = FactoryGetRentsCount(battleMode, lvlMode);
-    switch (battleMode)
-    {
+    switch (battleMode) {
         case FRONTIER_MODE_SINGLES:
             switch (lvlMode) {
                 case FRONTIER_LVL_5:
