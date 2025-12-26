@@ -1738,10 +1738,16 @@ static void CreateFrontierFactorySelectableMons(u8 firstMonId)
     u8 rentalRank = 0;
 
     gFacilityTrainerMons = gBattleFrontierMons;
-    if (gSaveBlock2Ptr->frontier.lvlMode != FRONTIER_LVL_50)
-        level = FRONTIER_MAX_LEVEL_OPEN;
-    else
-        level = FRONTIER_MAX_LEVEL_50;
+    switch (lvlMode) {
+        case FRONTIER_LVL_5:
+            level = FRONTIER_MAX_LEVEL_5;
+            break;
+        case FRONTIER_LVL_50:
+            level = FRONTIER_MAX_LEVEL_50;
+            break;
+        default:
+            level = FRONTIER_MAX_LEVEL_OPEN;
+    }
 
     rentalRank = GetNumPastRentalsRank(battleMode, lvlMode);
     otId = T1_READ_32(gSaveBlock2Ptr->playerTrainerId);
