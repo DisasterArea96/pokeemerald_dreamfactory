@@ -1374,33 +1374,34 @@ static void FactoryPrintPrevOrCurrentStreak(u8 battleMode, u8 lvlMode, u8 x1, u8
     u16 rents = FactoryGetRentsCount(battleMode, lvlMode);
     switch (battleMode)
     {
-    default:
-    case FRONTIER_MODE_SINGLES:
-        switch (lvlMode)
-            case FRONTIER_LVL_5:
-                isCurrent = IsWinStreakActive(STREAK_FACTORY_SINGLES_5);
-                break;
-            case FRONTIER_LVL_50:
-                isCurrent = IsWinStreakActive(STREAK_FACTORY_SINGLES_50);
-                break;
-            case FRONTIER_LVL_OPEN:
-                isCurrent = IsWinStreakActive(STREAK_FACTORY_SINGLES_OPEN);
-                break;
-            default:
-                isCurrent = IsWinStreakActive(STREAK_FACTORY_SINGLES_FM);
-    case FRONTIER_MODE_DOUBLES:
-        switch (lvlMode)
-            case FRONTIER_LVL_5:
-                isCurrent = IsWinStreakActive(STREAK_FACTORY_DOUBLES_5);
-                break;
-            case FRONTIER_LVL_50:
-                isCurrent = IsWinStreakActive(STREAK_FACTORY_DOUBLES_50);
-                break;
-            case FRONTIER_LVL_OPEN:
-                isCurrent = IsWinStreakActive(STREAK_FACTORY_DOUBLES_OPEN);
-                break;
-            default:
-                isCurrent = IsWinStreakActive(STREAK_FACTORY_DOUBLES_FM);
+        case FRONTIER_MODE_SINGLES:
+            switch (lvlMode) {
+                case FRONTIER_LVL_5:
+                    isCurrent = IsWinStreakActive(STREAK_FACTORY_SINGLES_5);
+                    break;
+                case FRONTIER_LVL_50:
+                    isCurrent = IsWinStreakActive(STREAK_FACTORY_SINGLES_50);
+                    break;
+                case FRONTIER_LVL_OPEN:
+                    isCurrent = IsWinStreakActive(STREAK_FACTORY_SINGLES_OPEN);
+                    break;
+                default:
+                    isCurrent = IsWinStreakActive(STREAK_FACTORY_SINGLES_FM);
+            }
+        case FRONTIER_MODE_DOUBLES:
+            switch (lvlMode) {
+                case FRONTIER_LVL_5:
+                    isCurrent = IsWinStreakActive(STREAK_FACTORY_DOUBLES_5);
+                    break;
+                case FRONTIER_LVL_50:
+                    isCurrent = IsWinStreakActive(STREAK_FACTORY_DOUBLES_50);
+                    break;
+                case FRONTIER_LVL_OPEN:
+                    isCurrent = IsWinStreakActive(STREAK_FACTORY_DOUBLES_OPEN);
+                    break;
+                default:
+                    isCurrent = IsWinStreakActive(STREAK_FACTORY_DOUBLES_FM);
+            }
     }
 
     if (isCurrent == TRUE)
