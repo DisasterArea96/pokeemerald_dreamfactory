@@ -242,8 +242,10 @@ static void SpriteCB_Null();
 static void Task_NewGameBirchSpeech_ReturnFromNamingScreenShowTextbox(u8);
 static void MainMenu_FormatSavegamePlayer(void);
 static void MainMenu_FormatSavegameTime(void);
+static void MainMenu_FormatSavegameLv5Record(void);
 static void MainMenu_FormatSavegameLv50Record(void);
 static void MainMenu_FormatSavegameOLRecord(void);
+static void MainMenu_FormatSavegameFMRecord(void);
 static void NewGameBirchSpeech_CreateDialogueWindowBorder(u8, u8, u8, u8, u8, u8);
 
 // .rodata
@@ -262,14 +264,14 @@ static const u16 sBirchSpeechPlatformBlackPal[] = {RGB_BLACK, RGB_BLACK, RGB_BLA
 #define MENU_TOP_WIN0 1
 #define MENU_TOP_WIN1 5
 #define MENU_TOP_WIN2 1
-#define MENU_TOP_WIN3 9
-#define MENU_TOP_WIN4 13
-#define MENU_TOP_WIN5 17
-#define MENU_TOP_WIN6 21
+#define MENU_TOP_WIN3 11
+#define MENU_TOP_WIN4 15
+#define MENU_TOP_WIN5 18
+#define MENU_TOP_WIN6 22
 #define MENU_WIDTH 26
 #define MENU_HEIGHT_WIN0 2
 #define MENU_HEIGHT_WIN1 2
-#define MENU_HEIGHT_WIN2 6
+#define MENU_HEIGHT_WIN2 8
 #define MENU_HEIGHT_WIN3 2
 #define MENU_HEIGHT_WIN4 2
 #define MENU_HEIGHT_WIN5 2
@@ -328,7 +330,7 @@ static const struct WindowTemplate sWindowTemplates_MainMenu[] =
         .width = MENU_WIDTH,
         .height = MENU_HEIGHT_WIN3,
         .paletteNum = 15,
-        .baseBlock = 0x9D
+        .baseBlock = 0xD1
     },
     // OPTION / MYSTERY GIFT
     {
@@ -338,7 +340,7 @@ static const struct WindowTemplate sWindowTemplates_MainMenu[] =
         .width = MENU_WIDTH,
         .height = MENU_HEIGHT_WIN4,
         .paletteNum = 15,
-        .baseBlock = 0xD1
+        .baseBlock = 0x105
     },
     // OPTION / MYSTERY EVENTS
     {
@@ -348,7 +350,7 @@ static const struct WindowTemplate sWindowTemplates_MainMenu[] =
         .width = MENU_WIDTH,
         .height = MENU_HEIGHT_WIN5,
         .paletteNum = 15,
-        .baseBlock = 0x105
+        .baseBlock = 0x139
     },
     // OPTION
     {
@@ -800,7 +802,7 @@ static void Task_DisplayMainMenu(u8 taskId)
                 FillWindowPixelBuffer(1, PIXEL_FILL(0xA));
                 AddTextPrinterParameterized3(0, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuNewGame);
                 AddTextPrinterParameterized3(1, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuOption);
-                AddTextPrinterParameterized3(5, FONT_NORMAL, 0, 1, sTextColor_Version, TEXT_SKIP_DRAW, gStringVar1);
+                AddTextPrinterParameterized3(5, FONT_SHORT, 0, 1, sTextColor_Version, TEXT_SKIP_DRAW, gStringVar1);
                 PutWindowTilemap(0);
                 PutWindowTilemap(1);
                 PutWindowTilemap(5);
@@ -817,7 +819,7 @@ static void Task_DisplayMainMenu(u8 taskId)
                 AddTextPrinterParameterized3(2, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuContinue);
                 AddTextPrinterParameterized3(3, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuNewGame);
                 AddTextPrinterParameterized3(4, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuOption);
-                AddTextPrinterParameterized3(5, FONT_NORMAL, 0, 1, sTextColor_Version, TEXT_SKIP_DRAW, gStringVar1);
+                AddTextPrinterParameterized3(5, FONT_SHORT, 0, 1, sTextColor_Version, TEXT_SKIP_DRAW, gStringVar1);
                 MainMenu_FormatSavegameText();
                 PutWindowTilemap(2);
                 PutWindowTilemap(3);
@@ -840,7 +842,7 @@ static void Task_DisplayMainMenu(u8 taskId)
                 AddTextPrinterParameterized3(3, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuNewGame);
                 AddTextPrinterParameterized3(4, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuMysteryGift);
                 AddTextPrinterParameterized3(5, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuOption);
-                AddTextPrinterParameterized3(6, FONT_NORMAL, 0, 1, sTextColor_Version, TEXT_SKIP_DRAW, gStringVar1);
+                AddTextPrinterParameterized3(6, FONT_SHORT, 0, 1, sTextColor_Version, TEXT_SKIP_DRAW, gStringVar1);
                 MainMenu_FormatSavegameText();
                 PutWindowTilemap(2);
                 PutWindowTilemap(3);
@@ -2158,9 +2160,11 @@ static void CreateMainMenuErrorWindow(const u8 *str)
 static void MainMenu_FormatSavegameText(void)
 {
     MainMenu_FormatSavegamePlayer();
-    MainMenu_FormatSavegameLv50Record();
-    MainMenu_FormatSavegameTime();
+    MainMenu_FormatSavegameLv5Record();
     MainMenu_FormatSavegameOLRecord();
+    MainMenu_FormatSavegameTime();
+    MainMenu_FormatSavegameLv50Record();
+    MainMenu_FormatSavegameFMRecord();
 }
 
 static void MainMenu_FormatSavegamePlayer(void)
@@ -2192,15 +2196,26 @@ static u16 FactoryGetRecordWinStreak(u8 battleMode, u8 lvlMode)
         return winStreak;
 }
 
+static void MainMenu_FormatSavegameLv5Record(void)
+{
+    u8 str[0x20];
+    u16 record = FactoryGetRecordWinStreak(FRONTIER_MODE_SINGLES, FRONTIER_LVL_5);
+
+    StringExpandPlaceholders(gStringVar4, gText_Lv5RecShort);
+    AddTextPrinterParameterized3(2, FONT_NORMAL, 0, 33, sTextColor_MenuInfo, TEXT_SKIP_DRAW, gStringVar4);
+    ConvertIntToDecimalStringN(str, record, STR_CONV_MODE_RIGHT_ALIGN, 4);
+    AddTextPrinterParameterized3(2, FONT_NORMAL, GetStringRightAlignXOffset(FONT_NORMAL, str, 100), 33, sTextColor_MenuInfo, TEXT_SKIP_DRAW, str);
+}
+
 static void MainMenu_FormatSavegameLv50Record(void)
 {
     u8 str[0x20];
     u16 record = FactoryGetRecordWinStreak(FRONTIER_MODE_SINGLES, FRONTIER_LVL_50);
 
     StringExpandPlaceholders(gStringVar4, gText_Lv502RecShort);
-    AddTextPrinterParameterized3(2, FONT_NORMAL, 0, 33, sTextColor_MenuInfo, TEXT_SKIP_DRAW, gStringVar4);
+    AddTextPrinterParameterized3(2, FONT_NORMAL, 0x6C, 33, sTextColor_MenuInfo, TEXT_SKIP_DRAW, gStringVar4);
     ConvertIntToDecimalStringN(str, record, STR_CONV_MODE_RIGHT_ALIGN, 4);
-    AddTextPrinterParameterized3(2, FONT_NORMAL, GetStringRightAlignXOffset(FONT_NORMAL, str, 100), 33, sTextColor_MenuInfo, TEXT_SKIP_DRAW, str);
+    AddTextPrinterParameterized3(2, FONT_NORMAL, GetStringRightAlignXOffset(FONT_NORMAL, str, 0xD0), 33, sTextColor_MenuInfo, TEXT_SKIP_DRAW, str);
 }
 
 static void MainMenu_FormatSavegameOLRecord(void)
@@ -2209,9 +2224,20 @@ static void MainMenu_FormatSavegameOLRecord(void)
     u16 record = FactoryGetRecordWinStreak(FRONTIER_MODE_SINGLES, FRONTIER_LVL_OPEN);
 
     StringExpandPlaceholders(gStringVar4, gText_OpenLvRecShort);
-    AddTextPrinterParameterized3(2, FONT_NORMAL, 0x6C, 33, sTextColor_MenuInfo, TEXT_SKIP_DRAW, gStringVar4);
+    AddTextPrinterParameterized3(2, FONT_NORMAL, 0, 49, sTextColor_MenuInfo, TEXT_SKIP_DRAW, gStringVar4);
     ConvertIntToDecimalStringN(str, record, STR_CONV_MODE_RIGHT_ALIGN, 4);
-    AddTextPrinterParameterized3(2, FONT_NORMAL, GetStringRightAlignXOffset(FONT_NORMAL, str, 0xD0), 33, sTextColor_MenuInfo, TEXT_SKIP_DRAW, str);
+    AddTextPrinterParameterized3(2, FONT_NORMAL, GetStringRightAlignXOffset(FONT_NORMAL, str, 100), 49, sTextColor_MenuInfo, TEXT_SKIP_DRAW, str);
+}
+
+static void MainMenu_FormatSavegameFMRecord(void)
+{
+    u8 str[0x20];
+    u16 record = FactoryGetRecordWinStreak(FRONTIER_MODE_SINGLES, FRONTIER_LVL_FM);
+
+    StringExpandPlaceholders(gStringVar4, gText_FinModeRecShort);
+    AddTextPrinterParameterized3(2, FONT_NORMAL, 0x6C, 49, sTextColor_MenuInfo, TEXT_SKIP_DRAW, gStringVar4);
+    ConvertIntToDecimalStringN(str, record, STR_CONV_MODE_RIGHT_ALIGN, 4);
+    AddTextPrinterParameterized3(2, FONT_NORMAL, GetStringRightAlignXOffset(FONT_NORMAL, str, 0xD0), 49, sTextColor_MenuInfo, TEXT_SKIP_DRAW, str);
 }
 
 static void LoadMainMenuWindowFrameTiles(u8 bgId, u16 tileOffset)

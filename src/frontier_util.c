@@ -57,6 +57,7 @@ static void DoSoftReset_(void);
 static void SetFrontierTrainers(void);
 static void SaveSelectedParty(void);
 static void ShowFacilityResultsWindow(void);
+static void ShowFacilityResultsWindow2(void);
 static void CheckPutFrontierTVShowOnAir(void);
 static void Script_GetFrontierBrainStatus(void);
 static void IsTrainerFrontierBrain(void);
@@ -77,6 +78,7 @@ static void ShowDomeResultsWindow(u8);
 static void ShowPalaceResultsWindow(u8);
 static void ShowPikeResultsWindow(void);
 static void ShowFactoryResultsWindow(u8);
+static void ShowFactoryResultsWindow2(u8);
 static void ShowArenaResultsWindow(void);
 static void ShowPyramidResultsWindow(void);
 static void ShowLinkContestResultsWindow(void);
@@ -614,6 +616,7 @@ static void (* const sFrontierUtilFuncs[])(void) =
     [FRONTIER_UTIL_FUNC_SET_TRAINERS]          = SetFrontierTrainers,
     [FRONTIER_UTIL_FUNC_SAVE_PARTY]            = SaveSelectedParty,
     [FRONTIER_UTIL_FUNC_RESULTS_WINDOW]        = ShowFacilityResultsWindow,
+    [FRONTIER_UTIL_FUNC_RESULTS_WINDOW_2]      = ShowFacilityResultsWindow2,
     [FRONTIER_UTIL_FUNC_CHECK_AIR_TV_SHOW]     = CheckPutFrontierTVShowOnAir,
     [FRONTIER_UTIL_FUNC_GET_BRAIN_STATUS]      = Script_GetFrontierBrainStatus,
     [FRONTIER_UTIL_FUNC_IS_BRAIN]              = IsTrainerFrontierBrain,
@@ -938,6 +941,39 @@ static void ShowFacilityResultsWindow(void)
         break;
     case FRONTIER_FACILITY_FACTORY:
         ShowFactoryResultsWindow(gSpecialVar_0x8006);
+        break;
+    case FRONTIER_FACILITY_ARENA:
+        ShowArenaResultsWindow();
+        break;
+    case FRONTIER_FACILITY_PYRAMID:
+        ShowPyramidResultsWindow();
+        break;
+    case FACILITY_LINK_CONTEST:
+        ShowLinkContestResultsWindow();
+        break;
+    }
+}
+
+static void ShowFacilityResultsWindow2(void)
+{
+    if (gSpecialVar_0x8006 >= FRONTIER_MODE_COUNT)
+        gSpecialVar_0x8006 = 0;
+    switch (gSpecialVar_0x8005)
+    {
+    case FRONTIER_FACILITY_TOWER:
+        ShowTowerResultsWindow(gSpecialVar_0x8006);
+        break;
+    case FRONTIER_FACILITY_DOME:
+        ShowDomeResultsWindow(gSpecialVar_0x8006);
+        break;
+    case FRONTIER_FACILITY_PALACE:
+        ShowPalaceResultsWindow(gSpecialVar_0x8006);
+        break;
+    case FRONTIER_FACILITY_PIKE:
+        ShowPikeResultsWindow();
+        break;
+    case FRONTIER_FACILITY_FACTORY:
+        ShowFactoryResultsWindow2(gSpecialVar_0x8006);
         break;
     case FRONTIER_FACILITY_ARENA:
         ShowArenaResultsWindow();
@@ -1420,13 +1456,36 @@ static void ShowFactoryResultsWindow(u8 battleMode)
         StringExpandPlaceholders(gStringVar4, gText_BattleSwapDoubleResults);
 
     PrintAligned(gStringVar4, 0);
-    AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_Lv502, 8, 33, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_Lv5, 8, 33, TEXT_SKIP_DRAW, NULL);
     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_RentalSwap, 152, 33, TEXT_SKIP_DRAW, NULL);
-    AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_OpenLv, 8, 97, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_Lv50, 8, 97, TEXT_SKIP_DRAW, NULL);
     PrintHyphens(10);
-    FactoryPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_50, 8, 64, 158, 49);
+    FactoryPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_5, 8, 64, 158, 49);
     FactoryPrintRecordStreak(battleMode, FRONTIER_LVL_50, 8, 64, 158, 65);
-    FactoryPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_OPEN, 8, 64, 158, 113);
+    FactoryPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_50, 8, 64, 158, 113);
+    FactoryPrintRecordStreak(battleMode, FRONTIER_LVL_OPEN, 8, 64, 158, 129);
+    PutWindowTilemap(gRecordsWindowId);
+    CopyWindowToVram(gRecordsWindowId, COPYWIN_FULL);
+}
+
+static void ShowFactoryResultsWindow2(u8 battleMode)
+{
+    gRecordsWindowId = AddWindow(&sFrontierResultsWindowTemplate);
+    DrawStdWindowFrame(gRecordsWindowId, FALSE);
+    FillWindowPixelBuffer(gRecordsWindowId, PIXEL_FILL(1));
+    if (battleMode == FRONTIER_MODE_SINGLES)
+        StringExpandPlaceholders(gStringVar4, gText_BattleSwapSingleResults);
+    else
+        StringExpandPlaceholders(gStringVar4, gText_BattleSwapDoubleResults);
+
+    PrintAligned(gStringVar4, 0);
+    AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_OpenLv, 8, 33, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_RentalSwap, 152, 33, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_FinalMode, 8, 97, TEXT_SKIP_DRAW, NULL);
+    PrintHyphens(10);
+    FactoryPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_OPEN, 8, 64, 158, 49);
+    FactoryPrintRecordStreak(battleMode, FRONTIER_LVL_50, 8, 64, 158, 65);
+    FactoryPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_FM, 8, 64, 158, 113);
     FactoryPrintRecordStreak(battleMode, FRONTIER_LVL_OPEN, 8, 64, 158, 129);
     PutWindowTilemap(gRecordsWindowId);
     CopyWindowToVram(gRecordsWindowId, COPYWIN_FULL);

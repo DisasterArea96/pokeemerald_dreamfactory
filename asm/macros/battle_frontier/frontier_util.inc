@@ -60,6 +60,16 @@
 	special CallFrontierUtilFunc
 	.endm
 
+	@ Shows the results window for the given facility and mode. Currently only implemented for factory, all other facilities will show the same data with this as the original function.
+	.macro frontier_results2 facility:req, mode=0xFF
+	setvar VAR_0x8004, FRONTIER_UTIL_FUNC_RESULTS_WINDOW_2
+	setvar VAR_0x8005, \facility
+	.if \mode != 0xFF
+	setvar VAR_0x8006, \mode
+	.endif
+	special CallFrontierUtilFunc
+	.endm
+
 	@ Checks if the Battle Frontier TV special should air, and if so attempts to set it up
 	.macro frontier_checkairshow
 	setvar VAR_0x8004, FRONTIER_UTIL_FUNC_CHECK_AIR_TV_SHOW
