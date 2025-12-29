@@ -11555,7 +11555,7 @@ const struct FacilityMon gBattleFrontierMons[NUM_FRONTIER_MONS] =
     [FRONTIER_MON_CELEBI_4] = {
         .species = SPECIES_CELEBI,
         .moves = {MOVE_RECOVER, MOVE_GIGA_DRAIN, MOVE_PSYCHIC, MOVE_LEECH_SEED},
-        .itemTableId = BATTLE_FRONTIER_ITEM_LEFTOVERS,
+        .itemTableId = BATTLE_FRONTIER_ITEM_MIRACLE_SEED,
         .evSpread = F_EV_SPREAD_HP | F_EV_SPREAD_DEFENSE | F_EV_SPREAD_SP_ATTACK,
         .nature = NATURE_MODEST
     },
@@ -12563,7 +12563,7 @@ const struct FacilityMon gBattleFrontierMons[NUM_FRONTIER_MONS] =
     [FRONTIER_MON_TYRANITAR_12] = {
         .species = SPECIES_TYRANITAR,
         .moves = {MOVE_FLAMETHROWER, MOVE_ROAR, MOVE_TOXIC, MOVE_PROTECT},
-        .itemTableId = BATTLE_FRONTIER_ITEM_BLACK_GLASSES,
+        .itemTableId = BATTLE_FRONTIER_ITEM_LEFTOVERS,
         .evSpread = F_EV_SPREAD_HP | F_EV_SPREAD_SP_DEFENSE,
         .nature = NATURE_CALM
     },
