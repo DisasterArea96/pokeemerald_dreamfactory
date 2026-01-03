@@ -1422,7 +1422,9 @@ static void FactoryPrintPrevOrCurrentStreak(u8 battleMode, u8 lvlMode, u8 x1, u8
                     break;
                 default:
                     isCurrent = IsWinStreakActive(STREAK_FACTORY_SINGLES_FM);
+                    break;
             }
+            break;
         case FRONTIER_MODE_DOUBLES:
             switch (lvlMode) {
                 case FRONTIER_LVL_5:
@@ -1436,7 +1438,9 @@ static void FactoryPrintPrevOrCurrentStreak(u8 battleMode, u8 lvlMode, u8 x1, u8
                     break;
                 default:
                     isCurrent = IsWinStreakActive(STREAK_FACTORY_DOUBLES_FM);
+                    break;
             }
+            break;
     }
 
     if (isCurrent == TRUE)
